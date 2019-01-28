@@ -1,0 +1,9 @@
+Package: OTGC
+Version: 1.2.0
+Section: custom
+Priority: optional
+Architecture: amd64
+Pre-Depends: openjdk-8-jdk, openjfx
+Maintainer: DEKRA Testing and Certification, S.A.U.
+Description: Onboarding Tool and Generic Client.
+

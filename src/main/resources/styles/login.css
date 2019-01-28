@@ -1,0 +1,13 @@
+#login_root_anchor_pane {
+    -fx-font-size: 14px;
+}
+
+#login_bottom_pane {
+    -fx-background-color: #ede7f6;
+}
+
+#login_fields_grid_pane {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, rgb(0.0, 0.0, 0.0, 0.15), 6.0, 0.7, 0.0,1.5);
+    -fx-background-radius: 4; -fx-border-radius: 4; -fx-padding: 8;
+}

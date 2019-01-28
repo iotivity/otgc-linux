@@ -1,0 +1,8 @@
+.info_title {
+    -fx-font-weight: bold;
+    -fx-text-fill: darkslategrey;
+}
+
+.info_content {
+    -fx-text-fill: lightslategrey;
+}

@@ -1,0 +1,21 @@
+#about_logo {
+
+}
+
+#title1 {
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+}
+
+#title2 {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+#para1 {
+    -fx-font-size: 12px;
+}
+
+#para2 {
+    -fx-font-size: 12px;
+}

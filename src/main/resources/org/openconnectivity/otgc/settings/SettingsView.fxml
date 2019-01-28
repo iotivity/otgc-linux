@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import com.jfoenix.controls.JFXTextField?>
+<!--
+  ~ Copyright 2018 DEKRA Testing and Certification, S.A.U. All Rights Reserved.
+  ~
+  ~ ******************************************************************
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~          http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  -->
+
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="400.0"
+      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.openconnectivity.otgc.settings.SettingsView">
+    <children>
+        <AnchorPane VBox.vgrow="ALWAYS">
+            <children>
+                <TitledPane text="%settings.iotivity.title" collapsible="false"
+                            AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                            AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+                    <AnchorPane>
+                        <children>
+                            <GridPane AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                      AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+                                <columnConstraints>
+                                    <ColumnConstraints percentWidth="60.0" hgrow="ALWAYS" />
+                                    <ColumnConstraints percentWidth="5.0" hgrow="NEVER" />
+                                    <ColumnConstraints percentWidth="35.0" hgrow="ALWAYS" />
+                                </columnConstraints>
+                                <children>
+                                    <AnchorPane GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                        <children>
+                                            <Label text="%settings.label.discovery_timeout" alignment="CENTER"
+                                                   AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"
+                                                   AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" />
+                                        </children>
+                                    </AnchorPane>
+                                    <AnchorPane GridPane.rowIndex="0" GridPane.columnIndex="2">
+                                        <children>
+                                            <JFXTextField fx:id="jfxDiscoveryTimeout" alignment="CENTER"
+                                                          AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                                          AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" />
+                                        </children>
+                                    </AnchorPane>
+                                </children>
+                            </GridPane>
+                        </children>
+                    </AnchorPane>
+                </TitledPane>
+            </children>
+        </AnchorPane>
+    </children>
+</VBox>

@@ -1,0 +1,8 @@
+.device_cell_title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.device_cell_info {
+    -fx-font-size: 12px;
+}

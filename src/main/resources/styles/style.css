@@ -1,0 +1,66 @@
+/*
+ * Font family
+ */
+@font-face {
+    font-family: 'Century Gothic';
+    src: url('../fonts/century_gothic_regular.ttf');
+}
+
+/*
+ * Scene
+ */
+.root {
+    -fx-font-family: 'Century Gothic';
+}
+
+/*
+ * Colors
+ */
+.color_primary, .ocf_dark_blue {
+    -fx-background-color: #006aa7;
+}
+
+.color_primary_dark, .ocf_darker_blue {
+    -fx-background-color: #004078;
+}
+
+.color_accent, .ocf_light_blue {
+    -fx-background-color: #3db5e6
+}
+
+.ocf_green {
+    -fx-background-color: #6bc04b;
+}
+
+.ocf_black {
+    -fx-background-color: #231f20;
+}
+
+.ocf_orange {
+    -fx-background-color: #f58220;
+}
+
+.ocf_yellow {
+    -fx-background-color: #fcc509;
+}
+
+.ocf_light_gray {
+    -fx-background-color: #717271;
+}
+
+.ocf_dark_gray {
+    -fx-background-color: #78777a;
+}
+
+/**
+* Toast
+*/
+.jfx-snackbar-content {
+    -fx-background-color: #404040;
+}
+.jfx-snackbar-toast {
+    -fx-text-fill: WHITE;
+}
+.jfx-snackbar-action {
+    -fx-text-fill: #ff4081;
+}
