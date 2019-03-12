@@ -105,7 +105,10 @@ public class InitOicStackUseCase {
                     setDeviceUuid(jsonObject, uuid);
                     X509Certificate caCertificate = ioRepository.getAssetAsX509Certificate(CRT_FILE).blockingGet();
                     PrivateKey caPrivateKey = ioRepository.getAssetAsPrivateKey(PRIVATE_KEY_FILE).blockingGet();
-                    addTrustCa(jsonObject, uuid, bytesToHex(caCertificate.getEncoded()));
+                    ASN1Sequence pkSeqCa = (ASN1Sequence)ASN1Sequence.fromByteArray(caPrivateKey.getEncoded());
+                    PrivateKeyInfo pkInfoCa = PrivateKeyInfo.getInstance(pkSeqCa);
+                    ECPrivateKey devPrivateKeyCa = ECPrivateKey.getInstance(pkInfoCa.parsePrivateKey());
+                    addTrustCa(jsonObject, uuid,  bytesToHex(devPrivateKeyCa.getEncoded()), bytesToHex(caCertificate.getEncoded()));
 
                     // public/private key pair that we are creating certificate for
                     ECGenParameterSpec ecParamSpec = new ECGenParameterSpec("secp256r1");
@@ -197,8 +200,8 @@ public class InitOicStackUseCase {
         jsonObject.getJSONObject("doxm").put("deviceuuid", deviceUuid);
     }
 
-    private void addTrustCa(JSONObject jsonObject, String deviceUuid, String derCertificate) throws JSONException {
-        addCertificate(jsonObject, deviceUuid, 2, derCertificate, null, "oic.sec.cred.trustca");
+    private void addTrustCa(JSONObject jsonObject, String deviceUuid, String rawPrivateKey, String derCertificate) throws JSONException {
+        addCertificate(jsonObject, deviceUuid, 2, derCertificate, rawPrivateKey, "oic.sec.cred.trustca");
     }
 
     private void addCert(JSONObject jsonObject, String deviceUuid, String rawPrivateKey, String derCertificate) throws JSONException {
@@ -226,7 +229,7 @@ public class InitOicStackUseCase {
         credObject.put("publicdata", publicDataObject);
 
         if (rawPrivateKey != null &&
-                (credUsage.equals("oic.sec.cred.cert") || credUsage.equals("oic.sec.cred.mfgcert"))) {
+                (credUsage.equals("oic.sec.cred.cert") || credUsage.equals("oic.sec.cred.mfgcert") || credUsage.equals("oic.sec.cred.trustca"))) {
             JSONObject privateDataObject = new JSONObject();
             privateDataObject.put("encoding", "oic.sec.encoding.raw");
             privateDataObject.put("data", rawPrivateKey);
@@ -281,23 +284,5 @@ public class InitOicStackUseCase {
                     + Character.digit(s.charAt(i+1), 16));
         }
         return data;
-    }
-
-    private static class ECRandom
-            extends SecureRandom
-    {
-        public void nextBytes(byte[] bytes)
-        {
-            byte[] src = new BigInteger("e2eb6663f551331bda00b90f1272c09d980260c1a70cab1ec481f6c937f34b62", 16).toByteArray();
-
-            if (src.length <= bytes.length)
-            {
-                System.arraycopy(src, 0, bytes, bytes.length - src.length, src.length);
-            }
-            else
-            {
-                System.arraycopy(src, 0, bytes, 0, bytes.length);
-            }
-        }
     }
 }

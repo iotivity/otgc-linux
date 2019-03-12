@@ -17,29 +17,28 @@
  *
  */
 
-package org.openconnectivity.otgc.devicelist.domain.usecase;
+package org.openconnectivity.otgc.linkdevices.domain.usecase;
 
-import io.reactivex.Observable;
-import org.openconnectivity.otgc.devicelist.domain.model.Device;
+import io.reactivex.Completable;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
+import org.openconnectivity.otgc.credential.data.repository.CmsRepository;
 
 import javax.inject.Inject;
 
-public class ScanDevicesUseCase {
-
+public class LinkRoleForClientUseCase {
     private final IotivityRepository iotivityRepository;
+    private final CmsRepository cmsRepository;
 
     @Inject
-    public ScanDevicesUseCase(IotivityRepository iotivityRepository) {
+    public LinkRoleForClientUseCase(IotivityRepository iotivityRepository,
+                                    CmsRepository cmsRepository)
+    {
         this.iotivityRepository = iotivityRepository;
+        this.cmsRepository = cmsRepository;
     }
 
-    public Observable<Device> execute() {
-        Observable<Device> unownedObservable = iotivityRepository.scanUnownedDevices();
-        Observable<Device> ownedObservable = iotivityRepository.scanOwnedDevices();
-
-        return iotivityRepository.scanHosts()
-                .andThen(Observable.concat(unownedObservable,
-                        ownedObservable));
+    public Completable execute(String deviceId, String roleId, String roleAuthority) {
+        return iotivityRepository.findOcSecureResource(deviceId)
+                .flatMapCompletable(ocSecureResource -> cmsRepository.provisionRoleCertificate(ocSecureResource, roleId, roleAuthority));
     }
 }

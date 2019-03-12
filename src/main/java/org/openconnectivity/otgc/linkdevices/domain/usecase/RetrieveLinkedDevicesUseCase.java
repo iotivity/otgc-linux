@@ -17,29 +17,31 @@
  *
  */
 
-package org.openconnectivity.otgc.devicelist.domain.usecase;
+package org.openconnectivity.otgc.linkdevices.domain.usecase;
 
-import io.reactivex.Observable;
-import org.openconnectivity.otgc.devicelist.domain.model.Device;
+import io.reactivex.Single;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
+import org.openconnectivity.otgc.common.data.repository.ProvisionRepository;
 
 import javax.inject.Inject;
+import java.util.List;
 
-public class ScanDevicesUseCase {
+public class RetrieveLinkedDevicesUseCase {
 
     private final IotivityRepository iotivityRepository;
+    private final ProvisionRepository provisionRepository;
 
     @Inject
-    public ScanDevicesUseCase(IotivityRepository iotivityRepository) {
+    public RetrieveLinkedDevicesUseCase(IotivityRepository iotivityRepository,
+            ProvisionRepository provisionRepository)
+    {
         this.iotivityRepository = iotivityRepository;
+        this.provisionRepository = provisionRepository;
     }
 
-    public Observable<Device> execute() {
-        Observable<Device> unownedObservable = iotivityRepository.scanUnownedDevices();
-        Observable<Device> ownedObservable = iotivityRepository.scanOwnedDevices();
-
-        return iotivityRepository.scanHosts()
-                .andThen(Observable.concat(unownedObservable,
-                        ownedObservable));
+    public Single<List<String>> execute(String deviceId)
+    {
+        return iotivityRepository.findOcSecureResource(deviceId)
+                .flatMap(provisionRepository::getLinkedDevices);
     }
 }

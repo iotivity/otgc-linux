@@ -24,20 +24,29 @@ import javafx.scene.control.ListCell;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import org.openconnectivity.otgc.devicelist.domain.model.Device;
+import org.openconnectivity.otgc.devicelist.domain.model.Role;
 
 import java.util.Arrays;
+import java.util.ResourceBundle;
 
 public class DeviceListViewCell extends ListCell<Device> {
+
+    ResourceBundle resourceBundle;
 
     private GridPane grid = new GridPane();
     private Pane pane = new Pane();
     private Label deviceName = new Label();
     private Label deviceUuid = new Label();
+    private Label deviceRole = new Label();
     private Label deviceType = new Label();
 
     private static final String DEVICE_LIST_VIEW_CELL_STYLE = "/styles/devicelistcell.css";
+    private static final String DEVICE_LIST_VIEW_CELL_STYLE_TITLE = "device_cell_title";
+    private static final String DEVICE_LIST_VIEW_CELL_STYLE_INFO = "device_cell_info";
 
     public DeviceListViewCell() {
+        resourceBundle = ResourceBundle.getBundle("properties.Strings");
+
         configureGrid();
         configurePane();
         configureDevice();
@@ -55,16 +64,18 @@ public class DeviceListViewCell extends ListCell<Device> {
     }
 
     private void configureDevice() {
-        deviceName.getStyleClass().add("device_cell_title");
-        deviceUuid.getStyleClass().add("device_cell_info");
-        deviceType.getStyleClass().add("device_cell_info");
+        deviceName.getStyleClass().add(DEVICE_LIST_VIEW_CELL_STYLE_TITLE);
+        deviceUuid.getStyleClass().add(DEVICE_LIST_VIEW_CELL_STYLE_INFO);
+        deviceRole.getStyleClass().add(DEVICE_LIST_VIEW_CELL_STYLE_INFO);
+        deviceType.getStyleClass().add(DEVICE_LIST_VIEW_CELL_STYLE_INFO);
     }
 
     private void addControlsToGrid() {
-        grid.add(pane, 0, 0, 1, 3);
+        grid.add(pane, 0, 0, 1, 4);
         grid.add(deviceName, 1, 0);
         grid.add(deviceUuid, 1, 1);
-        grid.add(deviceType, 1, 2);
+        grid.add(deviceRole, 1, 2);
+        grid.add(deviceType, 1, 3);
     }
 
     @Override
@@ -106,6 +117,14 @@ public class DeviceListViewCell extends ListCell<Device> {
         }
 
         deviceUuid.setText(device.getDeviceId());
+
+        if (device.getRole().equals(Role.CLIENT)) {
+            deviceRole.setText(resourceBundle.getString("devicelistcell.client"));
+        } else if (device.getRole().equals(Role.SERVER)) {
+            deviceRole.setText(resourceBundle.getString("devicelistcell.server"));
+        } else {
+            deviceRole.setText(resourceBundle.getString("devicelistcell.unknown"));
+        }
 
         setStyleClassDependingOnFoundOwner(device);
 

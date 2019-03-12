@@ -20,10 +20,7 @@
 package org.openconnectivity.otgc.scopes;
 
 import de.saxsys.mvvmfx.Scope;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import org.openconnectivity.otgc.devicelist.domain.model.Device;
 
 public class DeviceListToolbarDetailScope implements Scope {
@@ -38,10 +35,17 @@ public class DeviceListToolbarDetailScope implements Scope {
         return this.positionSelectedDevice;
     }
 
+    private ListProperty<Device> devicesList = new SimpleListProperty<>();
+    public ListProperty<Device> devicesListProperty() { return devicesList; }
+
+    private StringProperty selectedTab = new SimpleStringProperty();
+    public StringProperty selectedTabProperty() {
+        return this.selectedTab;
+    }
+
     public final Device getSelectedDevice() {
         return this.selectedDeviceProperty().get();
     }
-
     public final void setSelectedDevice(final Device selectedDevice) {
         this.selectedDeviceProperty().set(selectedDevice);
     }

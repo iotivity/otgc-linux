@@ -23,6 +23,7 @@ import io.reactivex.Completable;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
 import org.openconnectivity.otgc.common.data.repository.ProvisionRepository;
 import org.openconnectivity.otgc.common.data.repository.SettingRepository;
+import org.openconnectivity.otgc.devicelist.domain.model.DeviceType;
 import org.openconnectivity.otgc.toolbar.data.repository.DoxsRepository;
 
 import javax.inject.Inject;
@@ -48,8 +49,9 @@ public class SetRfotmModeUseCase {
 
     public Completable execute() {
         return iotivityRepository.scanOwnedDevices()
-                .flatMapCompletable(ocSecureResource ->
-                        doxsRepository.resetDevice(ocSecureResource,
+                .filter(device -> device.getDeviceType() == DeviceType.OWNED_BY_SELF)
+                .flatMapCompletable(device ->
+                        doxsRepository.resetDevice(device.getOcSecureResource(),
                                 Integer.parseInt(settingRepository.get(SettingRepository.DISCOVERY_TIMEOUT_KEY, SettingRepository.DISCOVERY_TIMEOUT_DEFAULT_VALUE))))
                 .delay(500, TimeUnit.MILLISECONDS)
                 .andThen(provisionRepository.resetSvrDb());

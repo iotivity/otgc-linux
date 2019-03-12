@@ -20,9 +20,9 @@
 package org.openconnectivity.otgc.toolbar.usecase;
 
 import io.reactivex.Single;
+import io.reactivex.Observable;
 import org.iotivity.base.OcSecureResource;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
-import org.openconnectivity.otgc.common.domain.model.OcDevice;
 import org.openconnectivity.otgc.devicelist.domain.model.Device;
 import org.openconnectivity.otgc.devicelist.domain.model.DeviceType;
 import org.openconnectivity.otgc.toolbar.data.repository.DoxsRepository;
@@ -43,9 +43,10 @@ public class OnboardUseCase {
     }
 
     public Single<Device> execute(OcSecureResource deviceToOnboard) {
-        final Single<OcSecureResource> getUpdatedOcSecureResource = iotivityRepository.scanOwnedDevices()
-                .filter(ocSecureResource -> (ocSecureResource.getDeviceID().equals(deviceToOnboard.getDeviceID()))
-                                                || ocSecureResource.getIpAddr().equals(deviceToOnboard.getIpAddr()))
+        final Single<Device> getUpdatedOcSecureResource = Observable.concat(iotivityRepository.scanUnownedDevices(), iotivityRepository.scanOwnedDevices())
+                .filter(device -> device.getDeviceType() == DeviceType.OWNED_BY_SELF
+                        && (device.getDeviceId().equals(deviceToOnboard.getDeviceID())
+                        || device.getOcSecureResource().getIpAddr().equals(deviceToOnboard.getIpAddr())))
                 .singleOrError();
 
         return doxsRepository.doOwnershipTransfer(deviceToOnboard)
@@ -53,10 +54,6 @@ public class OnboardUseCase {
                 .andThen(getUpdatedOcSecureResource)
                 .onErrorResumeNext(error -> getUpdatedOcSecureResource
                         .retry(2)
-                        .onErrorResumeNext(Single.error(error)))
-                .map(ocSecureResource -> new Device(DeviceType.OWNED_BY_SELF,
-                                                ocSecureResource.getDeviceID(),
-                                                new OcDevice(),
-                                                ocSecureResource));
+                        .onErrorResumeNext(Single.error(error)));
     }
 }

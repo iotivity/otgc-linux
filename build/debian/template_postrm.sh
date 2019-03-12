@@ -23,7 +23,7 @@ fi
 # Remove library project folder /usr/lib/otgc
 if [ -d /usr/lib/$PROJECT_NAME ]
 then
-    remove -r /usr/lib/$PROJECT_NAME
+    rm -r /usr/lib/$PROJECT_NAME
 fi
 
 # Remove data project folder	/usr/share/otgc

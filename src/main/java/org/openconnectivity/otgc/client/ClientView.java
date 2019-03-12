@@ -59,6 +59,7 @@ public class ClientView  implements FxmlView<ClientViewModel>, Initializable {
     @Inject
     private NotificationCenter notificationCenter;
 
+    @FXML private TabPane tabPane;
     @FXML private Tab clientTab;
     private VBox box;
 
@@ -73,6 +74,10 @@ public class ClientView  implements FxmlView<ClientViewModel>, Initializable {
 
         listView.itemsProperty().bind(viewModel.infoListProperty());
         listView.setCellFactory(deviceListView -> new InfoViewCell());
+        viewModel.selectedTabProperty().setValue(tabPane.getSelectionModel().getSelectedItem().getText());
+        tabPane.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> viewModel.selectedTabProperty().bind(newValue.textProperty())
+        );
 
         initClientTab();
         box.visibleProperty().bind(viewModel.clientVisibleProperty());
@@ -162,6 +167,7 @@ public class ClientView  implements FxmlView<ClientViewModel>, Initializable {
             case SUCCESS:
                 notificationCenter.publish(NotificationConstant.SET_PROGRESS_STATUS, false);
                 viewModel.buildUiForIntrospect(newValue.data);
+                box.getChildren().clear();
                 break;
             default:
                 notificationCenter.publish(NotificationConstant.SET_PROGRESS_STATUS, false);
@@ -179,6 +185,7 @@ public class ClientView  implements FxmlView<ClientViewModel>, Initializable {
             case SUCCESS:
                 notificationCenter.publish(NotificationConstant.SET_PROGRESS_STATUS, false);
                 viewModel.buildUiForRetrieveResources(newValue.data);
+                box.getChildren().clear();
                 break;
             default:
                 notificationCenter.publish(NotificationConstant.SET_PROGRESS_STATUS, false);

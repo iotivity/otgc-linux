@@ -17,34 +17,45 @@
  *
  */
 
-package org.openconnectivity.otgc.accesscontrol.domain.usecase;
+package org.openconnectivity.otgc.common.domain.usecase;
 
 import io.reactivex.Single;
 import org.iotivity.base.OcResource;
+import org.openconnectivity.otgc.common.constant.OcfResourceType;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
+import org.openconnectivity.otgc.devicelist.domain.model.Role;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-public class RetrieveVerticalResourcesUseCase {
+public class GetDeviceRoleUseCase {
     private final IotivityRepository iotivityRepository;
 
     @Inject
-    public RetrieveVerticalResourcesUseCase(IotivityRepository iotivityRepository) {
+    public GetDeviceRoleUseCase(IotivityRepository iotivityRepository) {
         this.iotivityRepository = iotivityRepository;
     }
 
-    public Single<List<String>> execute(String deviceId) {
+    public Single<Role> execute(String deviceId) {
         return iotivityRepository.getDeviceCoapIpv6Host(deviceId)
                 .flatMap(iotivityRepository::findResources)
+                .timeout(iotivityRepository.getDiscoveryTimeout() + 5, TimeUnit.SECONDS)
                 .map(ocResources -> {
-                    List<String> verticalResources = new ArrayList<>();
-                    for (OcResource ocResource : ocResources) {
-                        verticalResources.add(ocResource.getUri());
-                    }
+                   Role deviceRole = Role.CLIENT;
+                   for (OcResource resource : ocResources) {
+                       for (String resourceType : resource.getResourceTypes()) {
+                           if (OcfResourceType.isVerticalResourceType(resourceType)) {
+                               deviceRole = Role.SERVER;
+                               break;
+                           }
+                       }
 
-                    return verticalResources;
+                       if (deviceRole.equals(Role.SERVER)) {
+                           break;
+                       }
+                   }
+
+                   return deviceRole;
                 });
     }
 }

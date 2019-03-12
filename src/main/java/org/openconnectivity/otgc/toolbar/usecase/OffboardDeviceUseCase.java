@@ -23,9 +23,7 @@ import io.reactivex.Single;
 import org.iotivity.base.OcSecureResource;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
 import org.openconnectivity.otgc.common.data.repository.SettingRepository;
-import org.openconnectivity.otgc.common.domain.model.OcDevice;
 import org.openconnectivity.otgc.devicelist.domain.model.Device;
-import org.openconnectivity.otgc.devicelist.domain.model.DeviceType;
 import org.openconnectivity.otgc.toolbar.data.repository.DoxsRepository;
 
 import javax.inject.Inject;
@@ -47,10 +45,10 @@ public class OffboardDeviceUseCase {
     }
 
     public Single<Device> execute(OcSecureResource deviceToOffboard) {
-        final Single<OcSecureResource> getUpdatedOcSecureResource =
+        final Single<Device> getUpdatedOcSecureResource =
                 iotivityRepository.scanUnownedDevices()
-                    .filter(ocSecureResource -> (ocSecureResource.getDeviceID().equals(deviceToOffboard.getDeviceID())
-                                                    || ocSecureResource.getIpAddr().equals(deviceToOffboard.getIpAddr())))
+                    .filter(device -> (device.getDeviceId().equals(deviceToOffboard.getDeviceID())
+                                                    || device.getOcSecureResource().getIpAddr().equals(deviceToOffboard.getIpAddr())))
                     .singleOrError();
 
         return doxsRepository.resetDevice(deviceToOffboard,
@@ -60,10 +58,6 @@ public class OffboardDeviceUseCase {
                 .andThen(getUpdatedOcSecureResource)
                 .onErrorResumeNext(error -> getUpdatedOcSecureResource
                         .retry(2)
-                        .onErrorResumeNext(Single.error(error)))
-                .map(ocSecureResource -> new Device(DeviceType.UNOWNED,
-                                            ocSecureResource.getDeviceID(),
-                                            new OcDevice(),
-                                            ocSecureResource));
+                        .onErrorResumeNext(Single.error(error)));
     }
 }

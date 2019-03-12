@@ -19,14 +19,12 @@
 
 package org.openconnectivity.otgc.credential;
 
+import de.saxsys.mvvmfx.InjectResourceBundle;
 import de.saxsys.mvvmfx.InjectScope;
 import de.saxsys.mvvmfx.ViewModel;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -46,12 +44,16 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class CredentialViewModel implements ViewModel {
     public ObjectProperty<Device> deviceProperty;
 
     @InjectScope
     private DeviceListToolbarDetailScope deviceListToolbarDetailScope;
+
+    @InjectResourceBundle
+    private ResourceBundle resourceBundle;
 
     private final CompositeDisposable disposable = new CompositeDisposable();
 
@@ -68,6 +70,10 @@ public class CredentialViewModel implements ViewModel {
 
     private ListProperty<OicSecCred> credList = new SimpleListProperty<>();
     public ListProperty<OicSecCred> credListProperty() { return credList; }
+    private StringProperty selectedTab = new SimpleStringProperty();
+    public StringProperty selectedTabProperty() {
+        return this.selectedTab;
+    }
 
     @Inject
     public CredentialViewModel(SchedulersFacade schedulersFacade,
@@ -85,6 +91,8 @@ public class CredentialViewModel implements ViewModel {
     public void initialize() {
         deviceProperty = deviceListToolbarDetailScope.selectedDeviceProperty();
         deviceProperty.addListener(this::loadCredentials);
+        selectedTab = deviceListToolbarDetailScope.selectedTabProperty();
+        selectedTabProperty().addListener(this::loadCredentials);
     }
 
     public ObservableBooleanValue cmsVisibleProperty() {
@@ -105,12 +113,24 @@ public class CredentialViewModel implements ViewModel {
         return deleteCredResponse;
     }
 
+    public void loadCredentials(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+        // Clean Info
+        credListProperty().clear();
+
+        if ((newValue != null) && newValue.equals(resourceBundle.getString("client.tab.cms")) && deviceProperty.get() != null
+                && (deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_SELF
+                    || deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_OTHER)) {
+            retrieveCreds(deviceProperty.get().getDeviceId());
+        }
+    }
+
     public void loadCredentials(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
         // Clean Info
         credListProperty().clear();
 
-        if ((newValue != null) && (newValue.getDeviceType() == DeviceType.OWNED_BY_SELF
-                || newValue.getDeviceType() == DeviceType.OWNED_BY_OTHER)) {
+        if (selectedTabProperty().get() != null && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.cms")) && (newValue != null)
+                &&(newValue.getDeviceType() == DeviceType.OWNED_BY_SELF
+                    || newValue.getDeviceType() == DeviceType.OWNED_BY_OTHER)) {
             retrieveCreds(newValue.getDeviceId());
         }
     }

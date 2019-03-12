@@ -17,34 +17,43 @@
  *
  */
 
-package org.openconnectivity.otgc.accesscontrol.domain.usecase;
+package org.openconnectivity.otgc.linkdevices.domain.usecase;
 
 import io.reactivex.Single;
-import org.iotivity.base.OcResource;
+import org.iotivity.base.OicSecCred;
 import org.openconnectivity.otgc.common.data.repository.IotivityRepository;
+import org.openconnectivity.otgc.credential.data.repository.CmsRepository;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RetrieveVerticalResourcesUseCase {
+public class RetrieveLinkedRolesForClientUseCase {
     private final IotivityRepository iotivityRepository;
+    private final CmsRepository cmsRepository;
 
     @Inject
-    public RetrieveVerticalResourcesUseCase(IotivityRepository iotivityRepository) {
+    public RetrieveLinkedRolesForClientUseCase(IotivityRepository iotivityRepository,
+                                               CmsRepository cmsRepository)
+    {
         this.iotivityRepository = iotivityRepository;
+        this.cmsRepository = cmsRepository;
     }
 
-    public Single<List<String>> execute(String deviceId) {
-        return iotivityRepository.getDeviceCoapIpv6Host(deviceId)
-                .flatMap(iotivityRepository::findResources)
-                .map(ocResources -> {
-                    List<String> verticalResources = new ArrayList<>();
-                    for (OcResource ocResource : ocResources) {
-                        verticalResources.add(ocResource.getUri());
+    public Single<List<String>> execute(String deviceId)
+    {
+        return iotivityRepository.findOcSecureResource(deviceId)
+                .flatMap(cmsRepository::getCredentials)
+                .map(credentials -> {
+                    List<String> roles = new ArrayList<>();
+
+                    for (OicSecCred cred : credentials.getOicSecCreds()) {
+                        if (cred.getRole() != null) {
+                            roles.add(cred.getRole().getId());
+                        }
                     }
 
-                    return verticalResources;
+                    return roles;
                 });
     }
 }

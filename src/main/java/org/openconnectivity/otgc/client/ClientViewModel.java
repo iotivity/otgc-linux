@@ -26,20 +26,15 @@ import de.saxsys.mvvmfx.ViewModel;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Control;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TitledPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import org.controlsfx.control.ToggleSwitch;
 import org.iotivity.base.OcException;
@@ -96,6 +91,10 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     private ListProperty<Info> infoList = new SimpleListProperty<>();
     public ListProperty<Info> infoListProperty() { return infoList; }
+    private final StringProperty selectedTab = new SimpleStringProperty();
+    public final StringProperty selectedTabProperty(){
+        return this.selectedTab;
+    }
 
     @Inject
     public ClientViewModel(SchedulersFacade schedulersFacade,
@@ -124,7 +123,10 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void initialize() {
         deviceProperty = deviceListToolbarDetailScope.selectedDeviceProperty();
-        deviceProperty.addListener(this::loadGenericClient);
+        deviceProperty.addListener(this::loadInfoDevice);
+
+        deviceListToolbarDetailScope.selectedTabProperty().bindBidirectional(selectedTabProperty());
+        selectedTabProperty().addListener(this::loadGenericClient);
     }
 
     @Override
@@ -169,7 +171,7 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
                 || deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_OTHER), deviceProperty);
     }
 
-    public void loadGenericClient(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
+    public void loadInfoDevice(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
         // Clean Info
         infoListProperty().clear();
 
@@ -184,6 +186,17 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
             // Load Info
             loadDeviceInfo(deviceId);
             loadPlatformInfo(deviceId);
+            if (selectedTabProperty().get() != null  && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.generic_client"))) {
+                introspect(deviceId);
+            }
+        }
+    }
+
+    public void loadGenericClient(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+        if (newValue != null  && newValue.equals(resourceBundle.getString("client.tab.generic_client")) && deviceProperty.get() != null
+            && (deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_SELF
+                || deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_OTHER)){
+            String deviceId = deviceProperty.get().getDeviceId();
             introspect(deviceId);
         }
     }
@@ -455,26 +468,28 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
                 Label labelResource = new Label(entry.getKey());
                 TextField textResource = new TextField(entry.getValue().toString());
                 // TODO: TextField with integer format
-                textResource.setMaxWidth(150.0);
+                textResource.setMaxWidth(50.0);
                 vbox.getChildren().add(labelResource);
                 vbox.getChildren().add(textResource);
                 if (isViewEnabled(ocRepresentation.getResourceInterfaces())) {
-                    textResource.textProperty().addListener(((observable, oldValue, newValue) -> {
-                        Integer number;
-                        try {
-                            number = Integer.valueOf(newValue);
-                        } catch (NumberFormatException ex) {
-                            return;
-                        }
+                    textResource.focusedProperty().addListener(((observable, oldValue, newValue) -> {
+                        if (newValue != oldValue && !newValue) {
+                            Integer number;
+                            try {
+                                number = Integer.valueOf(textResource.getText());
+                            } catch (NumberFormatException ex) {
+                                return;
+                            }
 
-                        OcRepresentation rep = new OcRepresentation();
-                        try {
-                            rep.setValue(entry.getKey(), number);
-                        } catch (OcException ex) {
-                            // TODO
-                        }
+                            OcRepresentation rep = new OcRepresentation();
+                            try {
+                                rep.setValue(entry.getKey(), number);
+                            } catch (OcException ex) {
+                                // TODO
+                            }
 
-                        postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                            postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                        }
                     }));
                 } else {
                     vbox.disableProperty().setValue(true);
@@ -483,30 +498,125 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
                 Label labelResource = new Label(entry.getKey());
                 TextField textResource = new TextField(entry.getValue().toString());
                 // TODO: TextField with decimal format
-                textResource.setMaxWidth(150.0);
+                textResource.setMaxWidth(50.0);
                 vbox.getChildren().add(labelResource);
                 vbox.getChildren().add(textResource);
                 if (isViewEnabled(ocRepresentation.getResourceInterfaces())) {
-                    textResource.textProperty().addListener(((observable, oldValue, newValue) -> {
-                        Double number;
-                        try {
-                            number = Double.valueOf(newValue);
-                        } catch (NumberFormatException ex) {
-                            return;
-                        }
+                    textResource.focusedProperty().addListener(((observable, oldValue, newValue) -> {
+                        if (newValue != oldValue && !newValue) {
+                            Double number;
+                            try {
+                                number = Double.valueOf(textResource.getText());
+                            } catch (NumberFormatException ex) {
+                                return;
+                            }
 
-                        OcRepresentation rep = new OcRepresentation();
-                        try {
-                            rep.setValue(entry.getKey(), number);
-                        } catch (OcException ex) {
-                            // TODO
-                        }
+                            OcRepresentation rep = new OcRepresentation();
+                            try {
+                                rep.setValue(entry.getKey(), number);
+                            } catch (OcException ex) {
+                                // TODO
+                            }
 
-                        postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                            postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                        }
                     }));
                 } else {
                     vbox.disableProperty().setValue(true);
                 }
+            } else if (entry.getValue() instanceof String) {
+                Label labelResource = new Label(entry.getKey());
+                TextField textResource = new TextField(entry.getValue().toString());
+                textResource.setMaxWidth(150.0);
+                vbox.getChildren().add(labelResource);
+                vbox.getChildren().add(textResource);
+                if (isViewEnabled(ocRepresentation.getResourceInterfaces())) {
+                    textResource.focusedProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue != oldValue && !newValue) {
+                            OcRepresentation rep = new OcRepresentation();
+                            try {
+                                rep.setValue(entry.getKey(), textResource.getText());
+                            } catch (OcException ex) {
+                                // TODO:
+                            }
+
+                            postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                        }
+                    });
+                }
+            } else if (entry.getValue() instanceof String[]) {
+                Label labelResource = new Label(entry.getKey());
+                ComboBox<String> comboBox = new ComboBox<>();
+                comboBox.getItems().addAll((String[])entry.getValue());
+                comboBox.getSelectionModel().selectFirst();
+                vbox.getChildren().add(labelResource);
+                vbox.getChildren().add(comboBox);
+            } else if (entry.getValue() instanceof int[]) {
+                Label labelResource = new Label(entry.getKey());
+                labelResource.setPadding(new Insets(0, 20, 0, 20));
+                HBox intArrBox = new HBox();
+                intArrBox.setPadding(new Insets(0, 10, 0, 10));
+                intArrBox.setSpacing(10);
+                intArrBox.setAlignment(Pos.CENTER);
+                for (int v : (int[])entry.getValue()) {
+                    TextField textResource = new TextField(String.valueOf(v));
+                    textResource.setMaxWidth(50.0);
+                    textResource.focusedProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue != oldValue && !newValue) {
+                            int[] ret = new int[intArrBox.getChildren().size()];
+                            for (int i=0; i<intArrBox.getChildren().size(); i++) {
+                                TextField tf = (TextField)intArrBox.getChildren().get(i);
+                                ret[i] = Integer.parseInt(tf.getText());
+                            }
+
+                            OcRepresentation rep = new OcRepresentation();
+                            try {
+                                rep.setValue(entry.getKey(), ret);
+                            } catch (OcException ex) {
+                                // TODO:
+                            }
+
+                            postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                        }
+                    });
+
+                    intArrBox.getChildren().add(textResource);
+                }
+                vbox.getChildren().add(labelResource);
+                vbox.getChildren().add(intArrBox);
+
+            } else if (entry.getValue() instanceof  double[]) {
+                Label labelResource = new Label(entry.getKey());
+                labelResource.setPadding(new Insets(0, 20, 0, 20));
+                HBox doubleArrBox = new HBox();
+                doubleArrBox.setPadding(new Insets(0, 10, 0, 10));
+                doubleArrBox.setSpacing(10);
+                for (int v : (int[])entry.getValue()) {
+                    TextField textResource = new TextField(String.valueOf(v));
+                    textResource.setMaxWidth(50.0);
+                    textResource.focusedProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue != oldValue && !newValue) {
+                            double[] ret = new double[doubleArrBox.getChildren().size()];
+                            for (int i=0; i<doubleArrBox.getChildren().size(); i++) {
+                                TextField tf = (TextField)doubleArrBox.getChildren().get(i);
+                                ret[i] = Double.parseDouble(tf.getText());
+                            }
+
+                            OcRepresentation rep = new OcRepresentation();
+                            try {
+                                rep.setValue(entry.getKey(), ret);
+                            } catch (OcException ex) {
+                                // TODO:
+                            }
+
+                            postRequest(deviceProperty.get().getDeviceId(), resource, rep);
+                        }
+                    });
+
+                    doubleArrBox.getChildren().add(textResource);
+                }
+                vbox.getChildren().add(labelResource);
+                vbox.getChildren().add(doubleArrBox);
             }
 
             if (vbox != null) {

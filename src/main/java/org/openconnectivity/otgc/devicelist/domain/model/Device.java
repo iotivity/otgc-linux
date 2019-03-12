@@ -24,12 +24,14 @@ import org.openconnectivity.otgc.common.domain.model.OcDevice;
 
 public class Device implements Comparable<Device> {
     private DeviceType deviceType;
+    private Role role;
     private String deviceId;
     private OcDevice deviceInfo;
     private OcSecureResource ocSecureResource;
 
     public Device(DeviceType type, String deviceId, OcDevice deviceInfo, OcSecureResource ocSecureResource) {
         this.deviceType = type;
+        this.role = Role.UNKNOWN;
         this.deviceId = deviceId;
         this.deviceInfo = deviceInfo;
         this.ocSecureResource = ocSecureResource;
@@ -41,6 +43,14 @@ public class Device implements Comparable<Device> {
 
     public void setDeviceType(DeviceType deviceType) {
         this.deviceType = deviceType;
+    }
+
+    public Role getRole() {
+        return this.role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public String getDeviceId() {

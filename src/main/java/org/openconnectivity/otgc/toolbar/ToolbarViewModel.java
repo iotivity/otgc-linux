@@ -24,9 +24,7 @@ import de.saxsys.mvvmfx.ScopeProvider;
 import de.saxsys.mvvmfx.ViewModel;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import org.apache.log4j.Logger;
 import org.iotivity.base.OcSecureResource;
@@ -34,6 +32,7 @@ import org.iotivity.base.OxmType;
 import org.openconnectivity.otgc.common.constant.NotificationConstant;
 import org.openconnectivity.otgc.common.domain.usecase.GetDeviceInfoUseCase;
 import org.openconnectivity.otgc.common.domain.usecase.GetDeviceNameUseCase;
+import org.openconnectivity.otgc.common.domain.usecase.GetDeviceRoleUseCase;
 import org.openconnectivity.otgc.common.domain.usecase.SetDeviceNameUseCase;
 import org.openconnectivity.otgc.devicelist.domain.model.Device;
 import org.openconnectivity.otgc.devicelist.domain.model.DeviceType;
@@ -74,6 +73,7 @@ public class ToolbarViewModel implements ViewModel {
     private final RefreshSecResourceUseCase refreshSecResourceUseCase;
     private final OffboardDeviceUseCase offboardDeviceUseCase;
     private final RefreshUnsecResourceUseCase refreshUnsecResourceUseCase;
+    private final GetDeviceRoleUseCase getDeviceRoleUseCase;
 
     // Observable responses
     private final ObjectProperty<Response<Device>> otmResponse = new SimpleObjectProperty<>();
@@ -103,7 +103,8 @@ public class ToolbarViewModel implements ViewModel {
                     GetDeviceIdUseCase getDeviceIdUseCase,
                     RefreshSecResourceUseCase refreshSecResourceUseCase,
                     OffboardDeviceUseCase offboardDeviceUseCase,
-                    RefreshUnsecResourceUseCase refreshUnsecResourceUseCase) {
+                    RefreshUnsecResourceUseCase refreshUnsecResourceUseCase,
+                    GetDeviceRoleUseCase getDeviceRoleUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.getOTMethodsUseCase = getOTMethodsUseCase;
         this.setOTMethodUseCase = setOTMethodUseCase;
@@ -117,6 +118,7 @@ public class ToolbarViewModel implements ViewModel {
         this.refreshSecResourceUseCase = refreshSecResourceUseCase;
         this.offboardDeviceUseCase = offboardDeviceUseCase;
         this.refreshUnsecResourceUseCase = refreshUnsecResourceUseCase;
+        this.getDeviceRoleUseCase = getDeviceRoleUseCase;
     }
 
     public ObservableBooleanValue onboardButtonDisabled() {
@@ -172,6 +174,10 @@ public class ToolbarViewModel implements ViewModel {
                             device.setDeviceInfo(getDeviceInfoUseCase.execute(device.getDeviceId()).blockingGet());
                             return device;
                         }))
+                        .map(device -> {
+                            device.setRole(getDeviceRoleUseCase.execute(device.getDeviceId()).blockingGet());
+                            return device;
+                        })
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> otmResponse.setValue(Response.loading()))

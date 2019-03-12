@@ -31,6 +31,7 @@ import org.openconnectivity.otgc.common.rx.SchedulersFacade;
 import org.openconnectivity.otgc.common.viewmodel.Response;
 import org.openconnectivity.otgc.devicelist.domain.model.DeviceType;
 import org.openconnectivity.otgc.common.domain.usecase.GetDeviceNameUseCase;
+import org.openconnectivity.otgc.common.domain.usecase.GetDeviceRoleUseCase;
 import org.openconnectivity.otgc.devicelist.domain.usecase.ScanDevicesUseCase;
 import org.openconnectivity.otgc.scopes.DeviceListToolbarDetailScope;
 
@@ -48,6 +49,7 @@ public class DeviceListViewModel implements ViewModel {
     private final ScanDevicesUseCase scanDevicesUseCase;
     private final GetDeviceInfoUseCase getDeviceInfoUseCase;
     private final GetDeviceNameUseCase getDeviceNameUseCase;
+    private final GetDeviceRoleUseCase getDeviceRoleUseCase;
 
     private final CompositeDisposable disposables = new CompositeDisposable();
 
@@ -73,7 +75,7 @@ public class DeviceListViewModel implements ViewModel {
     public void initialize() {
         deviceListToolbarDetailScope.selectedDeviceProperty().bind(selectedDeviceProperty());
         deviceListToolbarDetailScope.positionSelectedDeviceProperty().bind(positionSelectedDeviceProperty());
-
+        deviceListToolbarDetailScope.devicesListProperty().bind(devicesList);
         // Notification subscribe
         deviceListToolbarDetailScope.subscribe(NotificationConstant.SCAN_DEVICES,
                 (key, payload) -> {
@@ -89,11 +91,13 @@ public class DeviceListViewModel implements ViewModel {
     public DeviceListViewModel(SchedulersFacade schedulersFacade,
                                ScanDevicesUseCase scanDevicesUseCase,
                                GetDeviceInfoUseCase getDeviceInfoUseCase,
-                               GetDeviceNameUseCase getDeviceNameUseCase) {
+                               GetDeviceNameUseCase getDeviceNameUseCase,
+                               GetDeviceRoleUseCase getDeviceRoleUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.scanDevicesUseCase = scanDevicesUseCase;
         this.getDeviceInfoUseCase = getDeviceInfoUseCase;
         this.getDeviceNameUseCase = getDeviceNameUseCase;
+        this.getDeviceRoleUseCase = getDeviceRoleUseCase;
     }
 
     public ObjectProperty<Response<Device>> scanResponseProperty() {
@@ -124,27 +128,31 @@ public class DeviceListViewModel implements ViewModel {
         devicesList.clear();
 
         disposables.add(scanDevicesUseCase.execute()
-                    .map(device -> {
-                        device.setDeviceInfo(getDeviceInfoUseCase.execute(device.getDeviceId()).blockingGet());
-                        return device;
-                    })
-                    .map(device -> {
-                        if (device.getDeviceType().equals(DeviceType.OWNED_BY_SELF)) {
-                            String storedDeviceName = getDeviceNameUseCase.execute(device.getDeviceId()).blockingGet();
-                            if (storedDeviceName != null && !storedDeviceName.isEmpty()) {
-                                device.getDeviceInfo().setName(storedDeviceName);
-                            }
-                        }
-                        return device;
-                    })
-                    .subscribeOn(schedulersFacade.io())
-                    .observeOn(schedulersFacade.ui())
-                    .doOnSubscribe(__ -> scanResponse.setValue(Response.loading()))
-                    .doOnComplete(() -> scanResponse.setValue(Response.complete()))
-                    .subscribe(
-                            device -> scanResponse.setValue(Response.success(device)),
-                            throwable -> scanResponse.setValue(Response.error(throwable))
-                    ));
+            .map(device -> {
+                device.setDeviceInfo(getDeviceInfoUseCase.execute(device.getDeviceId()).blockingGet());
+                return device;
+            })
+            .map(device -> {
+                device.setRole(getDeviceRoleUseCase.execute(device.getDeviceId()).blockingGet());
+                return device;
+            })
+            .map(device -> {
+                if (device.getDeviceType().equals(DeviceType.OWNED_BY_SELF)) {
+                    String storedDeviceName = getDeviceNameUseCase.execute(device.getDeviceId()).blockingGet();
+                    if (storedDeviceName != null && !storedDeviceName.isEmpty()) {
+                        device.getDeviceInfo().setName(storedDeviceName);
+                    }
+                }
+                return device;
+            })
+            .subscribeOn(schedulersFacade.io())
+            .observeOn(schedulersFacade.ui())
+            .doOnSubscribe(__ -> scanResponse.setValue(Response.loading()))
+            .doOnComplete(() -> scanResponse.setValue(Response.complete()))
+            .subscribe(
+                    device -> scanResponse.setValue(Response.success(device)),
+                    throwable -> scanResponse.setValue(Response.error(throwable))
+            ));
     }
 
     private void updateItem(int positionToUpdate, Device deviceToUpdate) {

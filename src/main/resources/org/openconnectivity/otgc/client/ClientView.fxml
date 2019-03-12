@@ -66,6 +66,12 @@
                                                 <fx:include source="../credential/CredentialView.fxml" />
                                             </content>
                                         </Tab>
+                                        <!-- Linked devices -->
+                                        <Tab fx:id="linkedDevicesTab" text="%client.tab.linkeddevices" closable="false">
+                                            <content>
+                                                <fx:include source="../linkdevices/LinkDevicesView.fxml" />
+                                            </content>
+                                        </Tab>
                                     </tabs>
                                 </TabPane>
                             </children>

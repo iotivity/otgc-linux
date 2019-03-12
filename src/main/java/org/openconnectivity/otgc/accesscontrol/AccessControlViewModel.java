@@ -19,14 +19,12 @@
 
 package org.openconnectivity.otgc.accesscontrol;
 
+import de.saxsys.mvvmfx.InjectResourceBundle;
 import de.saxsys.mvvmfx.InjectScope;
 import de.saxsys.mvvmfx.ViewModel;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleListProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -46,6 +44,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ResourceBundle;
 
 public class AccessControlViewModel implements ViewModel {
 
@@ -54,6 +53,9 @@ public class AccessControlViewModel implements ViewModel {
 
     @InjectScope
     private DeviceListToolbarDetailScope deviceListToolbarDetailScope;
+
+    @InjectResourceBundle
+    private ResourceBundle resourceBundle;
 
     private final CompositeDisposable disposable = new CompositeDisposable();
 
@@ -71,6 +73,10 @@ public class AccessControlViewModel implements ViewModel {
 
     private ListProperty<OicSecAce> aceList = new SimpleListProperty<>();
     public ListProperty<OicSecAce> aceListProperty() { return aceList; }
+    private StringProperty selectedTab = new SimpleStringProperty();
+    public StringProperty selectedTabProperty() {
+        return selectedTab;
+    }
 
     private ListProperty<String> verticalResourcesList = new SimpleListProperty<>();
     public ListProperty<String> verticalResourceListProperty() {
@@ -93,6 +99,8 @@ public class AccessControlViewModel implements ViewModel {
     public void initialize() {
         deviceProperty = deviceListToolbarDetailScope.selectedDeviceProperty();
         deviceProperty.addListener(this::loadAccessControl);
+        selectedTab = deviceListToolbarDetailScope.selectedTabProperty();
+        selectedTabProperty().addListener(this::loadAccessControl);
     }
 
     public ObservableBooleanValue amsVisibleProperty() {
@@ -123,11 +131,25 @@ public class AccessControlViewModel implements ViewModel {
         verticalResourceListProperty().clear();
         selectedVerticalResource.clear();
 
-        if ((newValue != null) && (newValue.getDeviceType() == DeviceType.OWNED_BY_SELF
-                                    || newValue.getDeviceType() == DeviceType.OWNED_BY_OTHER)) {
+        if (selectedTabProperty().get() != null && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.ams")) && (newValue != null)
+                && (newValue.getDeviceType() == DeviceType.OWNED_BY_SELF
+                    || newValue.getDeviceType() == DeviceType.OWNED_BY_OTHER)) {
             retrieveAcl(newValue.getDeviceId());
-
             retrieveVerticalResources(newValue.getDeviceId());
+        }
+    }
+
+    public void loadAccessControl(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+        // Clean Info
+        aceListProperty().clear();
+        verticalResourceListProperty().clear();
+        selectedVerticalResource.clear();
+
+        if (newValue != null && newValue.equals(resourceBundle.getString("client.tab.ams")) && deviceProperty.get() != null
+                && (deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_SELF
+                    || deviceProperty.get().getDeviceType() == DeviceType.OWNED_BY_OTHER)) {
+            retrieveAcl(deviceProperty.get().getDeviceId());
+            retrieveVerticalResources(deviceProperty.get().getDeviceId());
         }
     }
 
