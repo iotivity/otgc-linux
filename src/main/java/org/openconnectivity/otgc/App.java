@@ -23,21 +23,21 @@ import de.saxsys.mvvmfx.FluentViewLoader;
 import de.saxsys.mvvmfx.MvvmFX;
 import de.saxsys.mvvmfx.ViewTuple;
 import de.saxsys.mvvmfx.guice.MvvmfxGuiceApplication;
+import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
 import io.reactivex.exceptions.UndeliverableException;
 import io.reactivex.plugins.RxJavaPlugins;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
-import org.iotivity.base.OcPlatform;
-import org.openconnectivity.otgc.common.data.persistence.DatabaseManager;
-import org.openconnectivity.otgc.login.LoginView;
-import org.openconnectivity.otgc.login.LoginViewModel;
-import org.openconnectivity.otgc.common.util.OpenScene;
-import org.openconnectivity.otgc.main.MainView;
-import org.openconnectivity.otgc.main.MainViewModel;
+import org.iotivity.OCMain;
+import org.openconnectivity.otgc.data.persistence.DatabaseManager;
+import org.openconnectivity.otgc.utils.constant.NotificationKey;
+import org.openconnectivity.otgc.utils.util.OpenScene;
+import org.openconnectivity.otgc.view.main.MainView;
+import org.openconnectivity.otgc.viewmodel.MainViewModel;
 
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -52,6 +52,9 @@ public class App extends MvvmfxGuiceApplication {
     }
 
     private ResourceBundle resourceBundle;
+
+    @Inject
+    private NotificationCenter notificationCenter;
 
     @Override
     public void startMvvmfx(Stage stage){
@@ -86,10 +89,16 @@ public class App extends MvvmfxGuiceApplication {
     }
 
     private void closeApp() {
-        OcPlatform.Shutdown();
-        DatabaseManager.closeEntityManager();
-        DatabaseManager.closeEntityManagerFactory();
-        Platform.exit();
+        LOG.debug("Calling OCMain.mainShutdown()");
+        notificationCenter.publish(NotificationKey.SHUTDOWN_OIC_STACK);
+
+        notificationCenter.subscribe(NotificationKey.CANCEL_ALL_OBSERVERS,
+                (key, payload) -> {
+                    OCMain.mainShutdown();
+
+                    DatabaseManager.closeEntityManager();
+                    DatabaseManager.closeEntityManagerFactory();
+                });
     }
 
 }

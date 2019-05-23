@@ -93,13 +93,15 @@
     </build>
 
     <dependencies>
+        <!-- IoTivity-lite -->
         <dependency>
             <groupId>org.iotivity</groupId>
-            <artifactId>iotivity</artifactId>
-            <version>1.3.1</version>
+            <artifactId>iotivity-lite</artifactId>
+            <version>1.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/iotivity.jar</systemPath>
+            <systemPath>${project.basedir}/lib/iotivity-lite.jar</systemPath>
         </dependency>
+        <!-- -->
         <dependency>
             <groupId>de.saxsys</groupId>
             <artifactId>mvvmfx</artifactId>
@@ -182,7 +184,26 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Mockito -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>1.5.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>1.5.6</version>
             <scope>test</scope>
         </dependency>
         <!-- ControlsFX -->
@@ -216,6 +237,12 @@
             <groupId>com.upokecenter</groupId>
             <artifactId>cbor</artifactId>
             <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

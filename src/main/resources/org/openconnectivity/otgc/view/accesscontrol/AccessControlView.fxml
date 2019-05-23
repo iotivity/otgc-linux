@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import com.jfoenix.controls.JFXRadioButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import com.jfoenix.controls.JFXCheckBox?>
+<?import com.jfoenix.controls.JFXButton?>
+<!--
+  ~ Copyright 2018 DEKRA Testing and Certification, S.A.U. All Rights Reserved.
+  ~
+  ~ ******************************************************************
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~          http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  -->
+
+<AnchorPane maxHeight="1000" maxWidth="Infinity" minHeight="300" minWidth="400"
+            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="org.openconnectivity.otgc.view.accesscontrol.AccessControlView">
+    <children>
+        <GridPane fx:id="amsGrid" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="50.0" halignment="CENTER" hgrow="ALWAYS" />
+                <ColumnConstraints percentWidth="50.0" halignment="CENTER" hgrow="ALWAYS" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints valignment="CENTER" vgrow="ALWAYS" />
+            </rowConstraints>
+            <children>
+                <AnchorPane GridPane.columnIndex="0" prefWidth="100">
+                    <children>
+                        <ListView fx:id="amsListView" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                  AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                    </children>
+                </AnchorPane>
+                <AnchorPane GridPane.columnIndex="1" prefWidth="100">
+                    <children>
+                        <ScrollPane AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
+                                    AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                            <content>
+                                <VBox spacing="20" >
+                                    <children>
+                                        <VBox alignment="CENTER_LEFT" spacing="7">
+                                            <children>
+                                                <Label text="%accesscontrol.label.subject_type" />
+                                                <JFXRadioButton fx:id="uuidRadioButton" selected="true" text="%accesscontrol.radiobutton.uuid"
+                                                                onAction="#handleSubjectGroup">
+                                                    <toggleGroup>
+                                                        <ToggleGroup fx:id="toggleSubjectGroup"/>
+                                                    </toggleGroup>
+                                                </JFXRadioButton>
+                                                <JFXRadioButton fx:id="roleRadioButton" selected="false" onAction="#handleSubjectGroup"
+                                                                text="%accesscontrol.radiobutton.role" toggleGroup="$toggleSubjectGroup" />
+                                                <JFXRadioButton fx:id="conntypeRadioButton" selected="false" onAction="#handleSubjectGroup"
+                                                                text="%accesscontrol.radiobutton.conntype" toggleGroup="$toggleSubjectGroup" />
+                                            </children>
+                                        </VBox>
+                                        <VBox alignment="CENTER_LEFT" spacing="7">
+                                            <children>
+                                                <JFXTextField fx:id="uuidTextField" labelFloat="true" promptText="%accesscontrol.label.uuid" />
+                                                <HBox fx:id="roleBox" spacing="5" disable="true">
+                                                    <children>
+                                                        <JFXTextField fx:id="roleidTextField" labelFloat="true" promptText="%accesscontrol.label.role_id" />
+                                                        <JFXTextField fx:id="authorityTextField" labelFloat="true" promptText="%accesscontrol.label.role_authority" />
+                                                    </children>
+                                                </HBox>
+                                                <VBox fx:id="conntypeBox" spacing="7" disable="true">
+                                                    <children>
+                                                        <Label text="%accesscontrol.label.conntype" />
+                                                        <JFXRadioButton fx:id="anonRadioButton" selected="true" text="%accesscontrol.radiobutton.anon">
+                                                            <toggleGroup>
+                                                                <ToggleGroup fx:id="toggleConnGroup"/>
+                                                            </toggleGroup>
+                                                        </JFXRadioButton>
+                                                        <JFXRadioButton fx:id="authRadioButton" selected="false"
+                                                                        text="%accesscontrol.radiobutton.auth" toggleGroup="$toggleConnGroup" />
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </VBox>
+                                        <HBox>
+                                            <children>
+                                                <ListView fx:id="verticalResourcesList" prefHeight="100" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_LEFT" spacing="7">
+                                            <children>
+                                                <JFXCheckBox fx:id="createCheck" text="%accesscontrol.checkbox.create" />
+                                                <JFXCheckBox fx:id="retrieveCheck" text="%accesscontrol.checkbox.retrieve" />
+                                                <JFXCheckBox fx:id="updateCheck" text="%accesscontrol.checkbox.update" />
+                                                <JFXCheckBox fx:id="deleteCheck" text="%accesscontrol.checkbox.delete" />
+                                                <JFXCheckBox fx:id="notifyCheck" text="%accesscontrol.checkbox.notify" />
+                                            </children>
+                                        </HBox>
+                                        <HBox alignment="CENTER_RIGHT" spacing="7">
+                                            <children>
+                                                <JFXButton fx:id="saveButton" text="%accesscontrol.button.save" onAction="#handleSaveACL" />
+                                                <JFXButton fx:id="deleteButton" text="%accesscontrol.button.delete" onAction="#handleDeleteACL" />
+                                            </children>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </AnchorPane>
+            </children>
+        </GridPane>
+    </children>
+</AnchorPane>

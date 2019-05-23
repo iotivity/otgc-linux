@@ -29,7 +29,7 @@
             <property name="javax.persistence.jdbc.password" value="root" />
             <property name="hibernate.dialect" value="org.hibernate.dialect.HSQLDialect"/>
             <property name="hibernate.show_sql" value="true" />
-            <property name="hibernate.hbm2ddl.auto" value="create-drop" />
+            <property name="hibernate.hbm2ddl.auto" value="update" />
             <property name="hibernate.connection.charSet" value="UTF-8"/>
         </properties>
     </persistence-unit>

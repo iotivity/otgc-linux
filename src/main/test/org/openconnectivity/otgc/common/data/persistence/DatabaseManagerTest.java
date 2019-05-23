@@ -20,6 +20,7 @@
 package org.openconnectivity.otgc.common.data.persistence;
 
 import org.junit.Test;
+import org.openconnectivity.otgc.data.persistence.DatabaseManager;
 
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.*;
