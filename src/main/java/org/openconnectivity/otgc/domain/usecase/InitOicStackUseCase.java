@@ -53,12 +53,12 @@ public class InitOicStackUseCase {
     }
 
     public Completable execute() {
-        Completable initOic = iotivityRepository.initOICStack();
+        Completable initOic = iotivityRepository.setFactoryResetHandler(factoryReset)
+                .andThen(iotivityRepository.initOICStack());
 
         Completable completable;
         if (Boolean.valueOf(settingRepository.get(SettingRepository.FIRST_RUN_KEY, SettingRepository.FIRST_RUN_DEFAULT_VALUE))) {
-            completable = iotivityRepository.setFactoryResetHandler(factoryReset)
-                    .andThen(initOic)
+            completable = initOic
                     .andThen(makeRootAndIdentityCertificates(0))
                     .andThen(settingRepository.set(SettingRepository.FIRST_RUN_KEY, "false"));
         } else {
@@ -80,7 +80,7 @@ public class InitOicStackUseCase {
         // Store root CA as trusted anchor
         X509Certificate caCertificate = ioRepository.getAssetAsX509Certificate(OtgcConstant.ROOT_CERTIFICATE).blockingGet();
         String strCACertificate = certRepository.x509CertificateToPemString(caCertificate).blockingGet();
-        if (OCPki.addMfgTrustAnchor(device, strCACertificate.getBytes()) == -1) {
+        if (OCPki.addTrustAnchor(device, strCACertificate.getBytes()) == -1) {
             throw new Exception("Add trust anchor error");
         }
 

@@ -19,6 +19,7 @@
 
 package org.openconnectivity.otgc.data.repository;
 
+import com.upokecenter.cbor.CBORObject;
 import io.reactivex.Single;
 import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -26,6 +27,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.openconnectivity.otgc.utils.constant.OtgcConstant;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -68,9 +70,13 @@ public class IORepository {
     }
 
     public Single<X509Certificate> getAssetAsX509Certificate(String fileName) {
+        return getFileAsX509Certificate(assetsPath + fileName);
+    }
+
+    public Single<X509Certificate> getFileAsX509Certificate(String path) {
         return Single.create(emitter -> {
             try (InputStream inputStream =
-                         new FileInputStream(assetsPath + fileName)) {
+                         new FileInputStream(path)) {
                 Security.addProvider(new BouncyCastleProvider());
                 CertificateFactory factory = CertificateFactory.getInstance("X.509", BouncyCastleProvider.PROVIDER_NAME);
                 X509Certificate caCert = (X509Certificate) factory.generateCertificate(inputStream);
@@ -79,8 +85,17 @@ public class IORepository {
                 LOG.error("File not found: " + e.getMessage());
                 emitter.onError(e);
             } catch (IOException e) {
-                LOG.error(fileName + " file storage failed");
+                LOG.error(path + " file storage failed");
                 emitter.onError(e);
+            }
+        });
+    }
+
+    public Single<CBORObject> getAssetSvrAsCbor(String resource, long device) {
+        return Single.create(emitter -> {
+            try (FileInputStream stream = new FileInputStream(OtgcConstant.OTGC_CREDS_DIR + File.separator + resource + "_" + device)) {
+                CBORObject cbor = CBORObject.Read(stream);
+                emitter.onSuccess(cbor);
             }
         });
     }

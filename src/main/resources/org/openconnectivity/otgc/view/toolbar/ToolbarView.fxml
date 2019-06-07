@@ -30,7 +30,7 @@
         <ToolBar AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <items>
                 <JFXButton focusTraversable="false"
-                        onAction="#handleDiscoverButton" text="%toolbar.discover" />
+                           onAction="#handleDiscoverButton" text="%toolbar.discover" />
                 <JFXButton focusTraversable="false" fx:id="onboardButton"
                            onAction="#handleOnboardButton" text="%toolbar.onboard" />
                 <JFXButton focusTraversable="false" fx:id="offboardButton"
@@ -39,6 +39,8 @@
                            onAction="#handleRfotmButton" text="%toolbar.rfotm" />
                 <JFXButton focusTraversable="false" fx:id="rfnopButton"
                            onAction="#handleRfnopButton" text="%toolbar.rfnop" />
+                <JFXButton focusTraversable="false" fx:id="trustAnchorButton"
+                           onAction="#handleTrustAnchorButton" text="%toolbar.trust_anchor" />
             </items>
         </ToolBar>
     </children>
