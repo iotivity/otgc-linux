@@ -55,7 +55,8 @@ To import the IoTivity Base API Binary into the OTGC Linux App project:
 The OTGC application requires the following packages:
 
 - openjdk-8-jdk
-- openjfx
+- openjfx for Ubuntu 16
+- openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2 for Ubuntu 18
 
 This packages can install through the next command:
 
