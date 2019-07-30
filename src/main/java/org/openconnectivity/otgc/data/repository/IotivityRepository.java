@@ -42,6 +42,7 @@ import org.openconnectivity.otgc.utils.constant.OtgcConstant;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -95,7 +96,9 @@ public class IotivityRepository {
                 LOG.error("Failed to setup Storage Config.");
             }
 
-            OCIntrospection.setIntrospectionFile(0 /* First device */, OtgcConstant.INTROSPECTION_CBOR_FILE);
+            File introspectionFile = new File(OtgcConstant.INTROSPECTION_CBOR_FILE);
+            byte[] introspectionData = Files.readAllBytes(introspectionFile.toPath());
+            OCIntrospection.setIntrospectionData(0 /* First device */, introspectionData);
 
             int ret = OCMain.mainInit(new OCMainInitHandler() {
                 @Override
