@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.iotivity.*;
 import org.openconnectivity.otgc.domain.model.resource.secure.acl.*;
 import org.openconnectivity.otgc.utils.constant.OcfResourceUri;
+import org.openconnectivity.otgc.utils.constant.OcfWildcard;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -183,7 +184,11 @@ public class AmsRepository {
         List<OcAceResource> resources = new ArrayList<>();
         for (String verticalResource : verticalResources) {
             OcAceResource res = new OcAceResource();
-            res.setHref(verticalResource);
+            if (OcfWildcard.isWildcard(verticalResource)) {
+                res.setWildCard(verticalResource);
+            } else {
+                res.setHref(verticalResource);
+            }
             /*List<String> types = new ArrayList<>();
             types.add("*");
             res.setResourceTypes(types);

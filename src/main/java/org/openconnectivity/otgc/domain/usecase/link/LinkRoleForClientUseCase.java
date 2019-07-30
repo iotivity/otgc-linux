@@ -68,11 +68,21 @@ public class LinkRoleForClientUseCase {
                                     // Get Private Key of Root CA
                                     PrivateKey caPrivateKey = ioRepository.getAssetAsPrivateKey(OtgcConstant.ROOT_PRIVATE_KEY).blockingGet();
 
-                                    // Generate the certificate in PEM format
-                                    X509Certificate cert = certRepository.generateRoleCertificate(device.getDeviceId(), publicKey, caPrivateKey, roleId, roleAuthority).blockingGet();
-                                    String roleCert = certRepository.x509CertificateToPemString(cert).blockingGet();
+                                    // Get Root CA
+                                    X509Certificate rootCa = ioRepository.getAssetAsX509Certificate(OtgcConstant.ROOT_CERTIFICATE).blockingGet();
+                                    String rootCert = certRepository.x509CertificateToPemString(rootCa).blockingGet();
 
-                                    return cmsRepository.provisionRoleCertificate(endpoint, device.getDeviceId(), roleCert, roleId, roleAuthority);
+                                    // Generate the identity certificate in PEM format
+                                    X509Certificate idCert = certRepository.generateIdentityCertificate("*", publicKey, caPrivateKey).blockingGet();
+                                    //X509Certificate idCert = certRepository.generateIdentityCertificate(device.getDeviceId(), publicKey, caPrivateKey).blockingGet();
+                                    String identityCert = certRepository.x509CertificateToPemString(idCert).blockingGet();
+
+                                    // Generate the role certificate in PEM format
+                                    X509Certificate rCert = certRepository.generateRoleCertificate(device.getDeviceId(), publicKey, caPrivateKey, roleId, roleAuthority).blockingGet();
+                                    String roleCert = certRepository.x509CertificateToPemString(rCert).blockingGet();
+
+                                    return cmsRepository.provisionIdentityCertificate(endpoint, device.getDeviceId(), rootCert, identityCert)
+                                            .andThen(cmsRepository.provisionRoleCertificate(endpoint, device.getDeviceId(), roleCert, roleId, roleAuthority));
                                 })
                                 .andThen(pstatRepository.changeDeviceStatus(endpoint, device.getDeviceId(), OcfDosType.OC_DOSTYPE_RFNOP)));
     }

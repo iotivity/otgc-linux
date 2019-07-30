@@ -21,6 +21,7 @@ package org.openconnectivity.otgc.view.toolbar;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTextField;
+import de.saxsys.mvvmfx.FluentViewLoader;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
@@ -28,14 +29,18 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.utils.constant.OcfOxmType;
+import org.openconnectivity.otgc.utils.util.DialogHelper;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
+import org.openconnectivity.otgc.view.setting.SettingsView;
+import org.openconnectivity.otgc.view.trustanchor.TrustAnchorView;
 import org.openconnectivity.otgc.viewmodel.ToolbarViewModel;
 
 import javax.inject.Inject;
@@ -61,6 +66,7 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
     @FXML private JFXButton offboardButton;
     @FXML private JFXButton rfotmButton;
     @FXML private JFXButton rfnopButton;
+    @FXML private JFXButton trustAnchorButton;
 
     private int positionBeingUpdated = 0;
 
@@ -165,6 +171,12 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
     @FXML
     public void handleRfnopButton() {
         viewModel.setRfnopMode();
+    }
+
+    @FXML
+    public void handleTrustAnchorButton() {
+        Parent view = FluentViewLoader.fxmlView(TrustAnchorView.class).load().getView();
+        DialogHelper.showDialog(view, primaryStage, resourceBundle.getString("trust_anchor.window.title"));
     }
 
     private void processOtmResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {

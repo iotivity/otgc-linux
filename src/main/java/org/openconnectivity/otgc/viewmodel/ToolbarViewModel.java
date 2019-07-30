@@ -38,6 +38,7 @@ import org.openconnectivity.otgc.utils.scopes.DeviceListToolbarDetailScope;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @ScopeProvider(scopes = DeviceListToolbarDetailScope.class)
 public class ToolbarViewModel implements ViewModel {
@@ -149,10 +150,12 @@ public class ToolbarViewModel implements ViewModel {
                 .doOnSubscribe(__ -> otmResponse.setValue(Response.loading()))
                 .subscribe(
                         oxm -> onboardUseCase.execute(deviceToOnboard, oxm)
+                                        .delay(1, TimeUnit.SECONDS)
                                         .map(device -> {
                                             device.setDeviceInfo(getDeviceInfoUseCase.execute(device).blockingGet());
                                             return device;
                                         })
+                                        .delay(1, TimeUnit.SECONDS)
                                         .map(device -> {
                                             device.setDeviceRole(getDeviceRoleUseCase.execute(device).blockingGet());
                                             return device;

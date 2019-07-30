@@ -20,6 +20,7 @@
 package org.openconnectivity.otgc.data.repository;
 
 import io.reactivex.Completable;
+import io.reactivex.CompletableSource;
 import io.reactivex.Single;
 import org.apache.log4j.Logger;
 import org.iotivity.*;
@@ -97,7 +98,7 @@ public class CmsRepository {
         });
     }
 
-    public Completable provisionIdentityCertificate(String endpoint, String deviceId, String identityCert) {
+    public Completable provisionTrustAnchor(String endpoint, String deviceId, String rootCert) {
         return Completable.create(emitter -> {
             OCEndpoint ep = OCEndpointUtil.newEndpoint();
             OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
@@ -116,13 +117,13 @@ public class CmsRepository {
 
             if (OCMain.initPost(OcfResourceUri.CRED_URI, ep, null, handler, OCQos.HIGH_QOS)) {
                 OcCredPublicData publicData = new OcCredPublicData();
-                publicData.setPemData(identityCert);
+                publicData.setPemData(rootCert);
                 publicData.setEncoding(OcfEncoding.OC_ENCODING_PEM);
 
                 OcCredential cred = new OcCredential();
-                cred.setSubjectuuid(deviceId);
+                cred.setSubjectuuid("*");
                 cred.setCredtype(OcfCredType.OC_CREDTYPE_CERT);
-                cred.setCredusage(OcfCredUsage.OC_CREDUSAGE_CERT);
+                cred.setCredusage(OcfCredUsage.OC_CREDUSAGE_TRUSTCA);
                 cred.setPublicData(publicData);
                 List<OcCredential> credList = new ArrayList<>();
                 credList.add(cred);
@@ -146,6 +147,59 @@ public class CmsRepository {
 
             OCEndpointUtil.freeEndpoint(ep);
         });
+    }
+
+    public Completable provisionIdentityCertificate(String endpoint, String deviceId, String rootCert, String identityCert) {
+        return provisionTrustAnchor(endpoint, deviceId, rootCert)
+            .andThen(
+                Completable.create(emitter -> {
+                    OCEndpoint ep = OCEndpointUtil.newEndpoint();
+                    OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+                    OCUuid di = OCUuidUtil.stringToUuid(deviceId);
+                    OCEndpointUtil.setDi(ep, di);
+
+                    OCResponseHandler handler = (OCClientResponse response) -> {
+                        OCStatus code = response.getCode();
+                        if (code.equals(OCStatus.OC_STATUS_OK) || code.equals(OCStatus.OC_STATUS_CHANGED)) {
+                            LOG.debug("Provision identity certificate succeeded");
+                            emitter.onComplete();
+                        } else {
+                            emitter.onError(new IOException("Provision identity certificate error"));
+                        }
+                    };
+
+                    if (OCMain.initPost(OcfResourceUri.CRED_URI, ep, null, handler, OCQos.HIGH_QOS)) {
+                        OcCredPublicData publicData = new OcCredPublicData();
+                        publicData.setPemData(identityCert);
+                        publicData.setEncoding(OcfEncoding.OC_ENCODING_PEM);
+
+                        OcCredential cred = new OcCredential();
+                        cred.setSubjectuuid(deviceId);
+                        cred.setCredtype(OcfCredType.OC_CREDTYPE_CERT);
+                        cred.setCredusage(OcfCredUsage.OC_CREDUSAGE_CERT);
+                        cred.setPublicData(publicData);
+                        List<OcCredential> credList = new ArrayList<>();
+                        credList.add(cred);
+
+                        OcCredentials creds = new OcCredentials();
+                        creds.setCredList(credList);
+
+                        CborEncoder root = creds.parseToCbor();
+                        if (OCMain.doPost()) {
+                            LOG.debug("Sent POST request to /oic/sec/cred");
+                        } else {
+                            String error = "Could not send POST request to /oic/sec/cred";
+                            LOG.error(error);
+                            emitter.onError(new Exception(error));
+                        }
+                    } else {
+                        String error = "Could not init POST request to /oic/sec/cred";
+                        LOG.error(error);
+                        emitter.onError(new Exception(error));
+                    }
+
+                    OCEndpointUtil.freeEndpoint(ep);
+                }));
     }
 
     public Completable provisionRoleCertificate(String endpoint, String deviceId, String roleCert, String roleId, String roleAuthority) {
@@ -281,6 +335,27 @@ public class CmsRepository {
             }
 
             OCEndpointUtil.freeEndpoint(ep);
+        });
+    }
+
+    public Completable addTrustAnchor(String pemCert) {
+        return Completable.create(emitter -> {
+            if (OCPki.addTrustAnchor(0 /* First device */, pemCert.getBytes()) == -1) {
+                emitter.onError(new Exception("Add trust anchor error"));
+            }
+
+            if (OCPki.addMfgTrustAnchor(0 /* First device */, pemCert.getBytes()) == -1) {
+                emitter.onError(new Exception("Add manufacturer trust anchor error"));
+            }
+
+            emitter.onComplete();
+        });
+    }
+
+    public Completable removeTrustAnchor(long device, long credid) {
+        return Completable.create(emitter -> {
+            OCPki.removeCredentialByCredid(device, (int)credid);
+            emitter.onComplete();
         });
     }
 }
