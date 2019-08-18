@@ -77,6 +77,8 @@ public class DoxsRepository {
                         emitter.onError(new Exception(error));
                     }
                 });
+            } else if (oxm == OcfOxmType.OC_OXMTYPE_MFG_CERT) {
+                ret = OCObt.performCertOtm(uuid, handler);
             }
 
             if (ret >= 0) {
