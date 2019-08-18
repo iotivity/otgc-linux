@@ -20,7 +20,6 @@
 package org.openconnectivity.otgc.data.repository;
 
 import io.reactivex.Completable;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import org.apache.log4j.Logger;
@@ -105,7 +104,7 @@ public class IotivityRepository {
                 public int initialize() {
                     LOG.debug("In OCMainInitHandler.initilize()");
                     int ret = OCMain.initPlatform("OCF");
-                    ret |= OCMain.addDevice("/oic/d", "oic.d.phone", "OTGC", "ocf.1.0.0", "ocf.res.1.3.0");
+                    ret |= OCMain.addDevice("/oic/d", "oic.d.phone", "OTGC", "ocf.2.4.0", "ocf.res.1.3.0");
                     return ret;
                 }
 
@@ -375,7 +374,7 @@ public class IotivityRepository {
     public Single<String> getDeviceName(String deviceId) {
         return Single.create(emitter -> {
             DeviceEntity device = deviceDao.findById(deviceId);
-            emitter.onSuccess(device.getName());
+            emitter.onSuccess(device.getName() != null ? device.getName() : "Unnamed");
         });
     }
 
