@@ -29,13 +29,12 @@ import javafx.scene.control.ListView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Base64;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
 import org.openconnectivity.otgc.viewmodel.TrustAnchorViewModel;
 
 import javax.inject.Inject;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.security.Security;
 import java.security.cert.CertificateFactory;
@@ -77,7 +76,19 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
         alert.setResizable(true);
         alert.setTitle("Trust Anchor - Information");
         alert.setHeaderText(null);
-        alert.setContentText(showX509CertificateInformation(listView.getSelectionModel().getSelectedItem().getPublicData().getDerData()));
+
+        if (listView.getSelectionModel().getSelectedItem().getPublicData().getDerData() != null) {
+            alert.setContentText(showX509CertificateInformation(listView.getSelectionModel().getSelectedItem().getPublicData().getDerData()));
+        } else if (listView.getSelectionModel().getSelectedItem().getPublicData().getPemData() != null) {
+            String pem = listView.getSelectionModel().getSelectedItem().getPublicData().getPemData();
+            String base64 = pem.replaceAll("\\s", "")
+                                .replaceAll("\\r\\n", "")
+                                .replace("-----BEGINCERTIFICATE-----", "")
+                                .replace("-----ENDCERTIFICATE-----", "");
+            byte[] der = Base64.decode(base64.getBytes());
+            alert.setContentText(showX509CertificateInformation(der));
+        }
+
         alert.getDialogPane().setMinWidth(600.0);
 
         alert.showAndWait();
