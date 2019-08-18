@@ -73,8 +73,8 @@ public class LinkRoleForClientUseCase {
                                     String rootCert = certRepository.x509CertificateToPemString(rootCa).blockingGet();
 
                                     // Generate the identity certificate in PEM format
-                                    X509Certificate idCert = certRepository.generateIdentityCertificate("*", publicKey, caPrivateKey).blockingGet();
-                                    //X509Certificate idCert = certRepository.generateIdentityCertificate(device.getDeviceId(), publicKey, caPrivateKey).blockingGet();
+                                    //X509Certificate idCert = certRepository.generateIdentityCertificate("*", publicKey, caPrivateKey).blockingGet();
+                                    X509Certificate idCert = certRepository.generateIdentityCertificate(device.getDeviceId(), publicKey, caPrivateKey).blockingGet();
                                     String identityCert = certRepository.x509CertificateToPemString(idCert).blockingGet();
 
                                     // Generate the role certificate in PEM format
