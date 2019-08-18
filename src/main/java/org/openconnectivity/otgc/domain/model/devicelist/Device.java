@@ -53,17 +53,16 @@ public class Device implements Comparable<Device> {
         this.permits = permits;
 
         while(endpoints != null) {
-            String[] endpointStr = new String[1];
-            OCEndpointUtil.toString(endpoints, endpointStr);
+            String endpointStr = OCEndpointUtil.toString(endpoints);
 
-            if (endpointStr[0].startsWith("coaps://") && endpointStr[0].contains(".")) {
-                ipv4SecureHost = endpointStr[0];
-            } else if (endpointStr[0].startsWith("coaps://")) {
-                ipv6SecureHost = endpointStr[0];
-            } else if (endpointStr[0].startsWith("coap://") && endpointStr[0].contains(".")) {
-                ipv4Host = endpointStr[0];
-            } else if (endpointStr[0].startsWith("coap://")){
-                ipv6Host = endpointStr[0];
+            if (endpointStr.startsWith("coaps://") && endpointStr.contains(".")) {
+                ipv4SecureHost = endpointStr;
+            } else if (endpointStr.startsWith("coaps://")) {
+                ipv6SecureHost = endpointStr;
+            } else if (endpointStr.startsWith("coap://") && endpointStr.contains(".")) {
+                ipv4Host = endpointStr;
+            } else if (endpointStr.startsWith("coap://")){
+                ipv6Host = endpointStr;
             }
 
             endpoints = endpoints.getNext();
@@ -203,7 +202,17 @@ public class Device implements Comparable<Device> {
         int res;
 
         if (this.getDeviceType() ==  device.getDeviceType()) {     // Same types
-            int nameComparision = this.getDeviceInfo().getName().compareTo(device.getDeviceInfo().getName());
+            int nameComparision;
+            if (this.getDeviceInfo().getName() == null && device.getDeviceInfo().getName() == null) {
+                nameComparision = 0;
+            } else if (this.getDeviceInfo().getName() == null) {
+                nameComparision = -1;
+            } else if (device.getDeviceInfo().getName() == null) {
+                nameComparision = 1;
+            } else {
+                nameComparision = this.getDeviceInfo().getName().compareTo(device.getDeviceInfo().getName());
+            }
+
             int uuidComparision = this.getDeviceId().compareTo(device.getDeviceId());
 
             // order by name or order by UUID if the names are equals
