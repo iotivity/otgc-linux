@@ -85,7 +85,8 @@ public class LinkRoleForServerUseCase {
                                     return cmsRepository.provisionIdentityCertificate(endpoint, device.getDeviceId(), rootCert, identityCert);
                                 })
 
-                        .andThen(amsRepository.provisionRoleAcl(endpoint, device.getDeviceId(), roleId, roleAuthority, new ArrayList<>(Arrays.asList("*")), 31))
-                        .andThen(pstatRepository.changeDeviceStatus(endpoint, device.getDeviceId(), OcfDosType.OC_DOSTYPE_RFNOP)));
+                                .andThen(amsRepository.provisionRoleAcl(endpoint, device.getDeviceId(), roleId, roleAuthority, new ArrayList<>(Arrays.asList("*")), 31))
+                                .andThen(amsRepository.provisionConntypeAcl(endpoint, device.getDeviceId(), true, Arrays.asList("/oic/sec/roles"), 31))
+                                .andThen(pstatRepository.changeDeviceStatus(endpoint, device.getDeviceId(), OcfDosType.OC_DOSTYPE_RFNOP)));
     }
 }
