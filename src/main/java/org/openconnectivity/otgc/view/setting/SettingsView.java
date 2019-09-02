@@ -19,6 +19,7 @@
 
 package org.openconnectivity.otgc.view.setting;
 
+import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTextField;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
@@ -37,11 +38,18 @@ public class SettingsView implements FxmlView<SettingsViewModel>, Initializable 
     private SettingsViewModel viewModel;
 
     @FXML private JFXTextField jfxDiscoveryTimeout;
+    @FXML private JFXComboBox<String> jfxDiscoveryScope;
 
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         jfxDiscoveryTimeout.textProperty().bindBidirectional(viewModel.discoveryTimeoutProperty());
         jfxDiscoveryTimeout.setTextFormatter(new TextFormatter<>(PositiveIntegerValidator.getFilter()));
+
+        jfxDiscoveryScope.itemsProperty().bindBidirectional(viewModel.discoveryScopeProperty());
+        jfxDiscoveryScope.getSelectionModel().select(viewModel.selectedDiscoveryScopeProperty().get());
+        jfxDiscoveryScope.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+            viewModel.selectedDiscoveryScopeProperty().setValue(newValue);
+        }));
     }
 }
