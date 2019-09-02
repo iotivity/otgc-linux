@@ -42,6 +42,8 @@ public class SettingRepository {
     public static final String DISCOVERY_TIMEOUT_DEFAULT_VALUE = "5";
     public static final String FIRST_RUN_KEY = "FIRSTRUN";
     public static final String FIRST_RUN_DEFAULT_VALUE = "true";
+    public static final String DISCOVERY_SCOPE_KEY = "discovery_scope";
+    public static final String DISCOVERY_SCOPE_DEFAULT_VALUE = "Link-Local";
 
 
     @Inject

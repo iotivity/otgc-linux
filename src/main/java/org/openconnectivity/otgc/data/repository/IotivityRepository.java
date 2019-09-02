@@ -20,6 +20,7 @@
 package org.openconnectivity.otgc.data.repository;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import org.apache.log4j.Logger;
@@ -28,6 +29,7 @@ import org.openconnectivity.otgc.domain.model.resource.virtual.p.OcPlatformInfo;
 import org.openconnectivity.otgc.domain.model.resource.virtual.res.OcEndpoint;
 import org.openconnectivity.otgc.domain.model.resource.virtual.res.OcRes;
 import org.openconnectivity.otgc.domain.model.resource.virtual.res.OcResource;
+import org.openconnectivity.otgc.utils.constant.DiscoveryScope;
 import org.openconnectivity.otgc.utils.constant.OcfResourceType;
 import org.openconnectivity.otgc.data.entity.DeviceEntity;
 import org.openconnectivity.otgc.data.persistence.DatabaseManager;
@@ -145,7 +147,6 @@ public class IotivityRepository {
 
     public Observable<Device> scanUnownedDevices() {
         return Completable.create(emitter -> {
-            LOG.debug("Discovering unowned devices");
             unownedDevices.clear();
 
             OCObtDiscoveryHandler handler = (uuid, endpoints) -> {
@@ -162,20 +163,30 @@ public class IotivityRepository {
                 unownedDevices.add(new Device(DeviceType.UNOWNED, deviceId, new OcDeviceInfo(), endpoints, Device.NOTHING_PERMITS));
             };
 
-            int ret = OCObt.discoverUnownedDevices(handler);
+            int ret;
+            String scope = settingRepository.get(SettingRepository.DISCOVERY_SCOPE_KEY, SettingRepository.DISCOVERY_SCOPE_DEFAULT_VALUE);
+            if (scope.equals(DiscoveryScope.DISCOVERY_SCOPE_SITE)) {
+                LOG.debug("Discovering unowned devices in Site-Local scope");
+                ret = OCObt.discoverUnownedDevicesSiteLocalIPv6(handler);
+            } else if (scope.equals(DiscoveryScope.DISCOVERY_SCOPE_REALM)) {
+                LOG.debug("Discovering unowned devices in Realm-Local scope");
+                ret = OCObt.discoverUnownedDevicesRealmLocalIPv6(handler);
+            } else {
+                LOG.debug("Discovering unowned devices in Link-Local scope");
+                ret = OCObt.discoverUnownedDevices(handler);
+            }
             if (ret < 0) {
                 String error = "ERROR discovering un-owned Devices.";
                 LOG.error(error);
                 emitter.onError(new Exception(error));
             }
         }).timeout(getDiscoveryTimeout(), TimeUnit.SECONDS)
-        .onErrorComplete()
-        .andThen(Observable.fromIterable(unownedDevices));
+                .onErrorComplete()
+                .andThen(Observable.fromIterable(unownedDevices));
     }
 
     public Observable<Device> scanOwnedDevices() {
         return Completable.create(emitter -> {
-            LOG.debug("Discovering owned devices");
             ownedDevices.clear();
 
             OCObtDiscoveryHandler handler = (uuid, endpoints) -> {
@@ -192,15 +203,26 @@ public class IotivityRepository {
                 ownedDevices.add(new Device(DeviceType.OWNED_BY_SELF, deviceId, new OcDeviceInfo(), endpoints, Device.FULL_PERMITS));
             };
 
-            int ret = OCObt.discoverOwnedDevices(handler);
+            int ret;
+            String scope = settingRepository.get(SettingRepository.DISCOVERY_SCOPE_KEY, SettingRepository.DISCOVERY_SCOPE_DEFAULT_VALUE);
+            if (scope.equals(DiscoveryScope.DISCOVERY_SCOPE_SITE)) {
+                LOG.debug("Discovering owned devices in Site-Local scope");
+                ret = OCObt.discoverOwnedDevicesSiteLocalIPv6(handler);
+            } else if (scope.equals(DiscoveryScope.DISCOVERY_SCOPE_REALM)) {
+                LOG.debug("Discovering owned devices in Realm-Local scope");
+                ret = OCObt.discoverOwnedDevicesRealmLocalIPv6(handler);
+            } else {
+                LOG.debug("Discovering owned devices in Link-Local scope");
+                ret = OCObt.discoverOwnedDevices(handler);
+            }
             if (ret < 0) {
                 String error = "ERROR discovering owned Devices.";
                 LOG.error(error);
                 emitter.onError(new Exception(error));
             }
         }).timeout(getDiscoveryTimeout(), TimeUnit.SECONDS)
-        .onErrorComplete()
-        .andThen(Observable.fromIterable(ownedDevices));
+                .onErrorComplete()
+                .andThen(Observable.fromIterable(ownedDevices));
     }
 
     public Completable scanHosts() {
@@ -233,8 +255,22 @@ public class IotivityRepository {
                 }
             };
 
-            if (!OCMain.doIPMulticast(OcfResourceUri.RES_URI, null, handler)) {
-                emitter.onError(new Exception("Error scanning hosts"));
+            String scope = settingRepository.get(SettingRepository.DISCOVERY_SCOPE_KEY, SettingRepository.DISCOVERY_SCOPE_DEFAULT_VALUE);
+            if (scope.equals(DiscoveryScope.DISCOVERY_SCOPE_SITE)) {
+                LOG.debug("Discovering owned devices by other OBT in Site-Local scope");
+                if (!OCMain.doSiteLocalIPv6Multicast(OcfResourceUri.RES_URI, null, handler)) {
+                    emitter.onError(new Exception("Error scanning hosts"));
+                }
+            } else if (scope.equals(DiscoveryScope.DISCOVERY_SCOPE_REALM)) {
+                LOG.debug("Discovering owned devices by other OBT in Realm-Local scope");
+                if (!OCMain.doRealmLocalIPv6Multicast(OcfResourceUri.RES_URI, null, handler)) {
+                    emitter.onError(new Exception("Error scanning hosts"));
+                }
+            } else {
+                LOG.debug("Discovering owned devices by other OBT in Link-Local scope");
+                if (!OCMain.doIPMulticast(OcfResourceUri.RES_URI, null, handler)) {
+                    emitter.onError(new Exception("Error scanning hosts"));
+                }
             }
 
         }).timeout(getDiscoveryTimeout(), TimeUnit.SECONDS)
@@ -397,7 +433,7 @@ public class IotivityRepository {
 
     public int getDiscoveryTimeout() {
         return Integer.parseInt(settingRepository.get(SettingRepository.DISCOVERY_TIMEOUT_KEY,
-                                                        SettingRepository.DISCOVERY_TIMEOUT_DEFAULT_VALUE));
+                SettingRepository.DISCOVERY_TIMEOUT_DEFAULT_VALUE));
     }
 
     public Single<List<OcResource>> findVerticalResources(String host) {

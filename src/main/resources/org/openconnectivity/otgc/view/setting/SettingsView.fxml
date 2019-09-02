@@ -28,6 +28,7 @@
 
 <?import com.jfoenix.controls.JFXCheckBox?>
 <?import com.jfoenix.controls.JFXRadioButton?>
+<?import com.jfoenix.controls.JFXComboBox?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="400.0"
       xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.openconnectivity.otgc.view.setting.SettingsView">
@@ -46,13 +47,9 @@
                                     <ColumnConstraints percentWidth="5.0" hgrow="NEVER" />
                                     <ColumnConstraints percentWidth="35.0" hgrow="ALWAYS" />
                                 </columnConstraints>
-                                <!-- <rowConstraints>
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                </rowConstraints> -->
                                 <children>
                                     <!-- Row 0 : Discovery timeout-->
-                                    <!-- <AnchorPane GridPane.rowIndex="0" GridPane.columnIndex="0">
+                                    <AnchorPane GridPane.rowIndex="0" GridPane.columnIndex="0">
                                         <children>
                                             <Label text="%settings.label.discovery_timeout" alignment="CENTER"
                                                    AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"
@@ -65,9 +62,9 @@
                                                           AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
                                                           AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" />
                                         </children>
-                                    </AnchorPane>-->
+                                    </AnchorPane>
                                     <!-- Row 1 : Discovery scope -->
-                                    <!-- <AnchorPane GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                    <AnchorPane GridPane.rowIndex="1" GridPane.columnIndex="0">
                                         <children>
                                             <Label text="%settings.label.discovery_scope" alignment="CENTER"
                                                    AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"
@@ -76,18 +73,11 @@
                                     </AnchorPane>
                                     <AnchorPane GridPane.rowIndex="1" GridPane.columnIndex="2">
                                         <children>
-                                            <JFXRadioButton fx:id="linkRadioButton" selected="true" text="%settings.iotivity.radiobutton.link"
-                                                            onAction="#handleDiscoveryScopeGroup">
-                                                <toggleGroup>
-                                                    <ToggleGroup fx:id="toggleDiscoveryScopeGroup"/>
-                                                </toggleGroup>
-                                            </JFXRadioButton>
-                                            <JFXRadioButton fx:id="siteRadioButton" selected="false" onAction="#handleDiscoveryScopeGroup"
-                                                            text="%settings.iotivity.radiobutton.site" toggleGroup="$toggleDiscoveryScopeGroup" />
-                                            <JFXRadioButton fx:id="realmRadioButton" selected="false" onAction="#handleDiscoveryScopeGroup"
-                                                            text="%settings.iotivity.radiobutton.realm" toggleGroup="$toggleDiscoveryScopeGroup" />
+                                            <JFXComboBox fx:id="jfxDiscoveryScope"
+                                                         AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"
+                                                         AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" />
                                         </children>
-                                    </AnchorPane> -->
+                                    </AnchorPane>
                                 </children>
                             </GridPane>
                         </children>

@@ -27,6 +27,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import org.apache.log4j.Logger;
+import org.openconnectivity.otgc.domain.usecase.accesscontrol.CreateAclUseCase;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.domain.model.devicelist.DeviceType;
@@ -37,6 +38,7 @@ import org.openconnectivity.otgc.domain.usecase.*;
 import org.openconnectivity.otgc.utils.scopes.DeviceListToolbarDetailScope;
 
 import javax.inject.Inject;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +61,7 @@ public class ToolbarViewModel implements ViewModel {
     private final SchedulersFacade schedulersFacade;
     private final GetOTMethodsUseCase getOTMethodsUseCase;
     private final OnboardUseCase onboardUseCase;
+    private final CreateAclUseCase createAclUseCase;
     private final GetDeviceInfoUseCase getDeviceInfoUseCase;
     private final GetDeviceNameUseCase getDeviceNameUseCase;
     private final SetDeviceNameUseCase setDeviceNameUseCase;
@@ -85,6 +88,7 @@ public class ToolbarViewModel implements ViewModel {
     public ToolbarViewModel(SchedulersFacade schedulersFacade,
                     GetOTMethodsUseCase getOTMethodsUseCase,
                     OnboardUseCase onboardUseCase,
+                    CreateAclUseCase createAclUseCase,
                     GetDeviceInfoUseCase getDeviceInfoUseCase,
                     GetDeviceNameUseCase getDeviceNameUseCase,
                     SetDeviceNameUseCase setDeviceNameUseCase,
@@ -96,6 +100,7 @@ public class ToolbarViewModel implements ViewModel {
         this.schedulersFacade = schedulersFacade;
         this.getOTMethodsUseCase = getOTMethodsUseCase;
         this.onboardUseCase = onboardUseCase;
+        this.createAclUseCase = createAclUseCase;
         this.getDeviceInfoUseCase = getDeviceInfoUseCase;
         this.getDeviceNameUseCase = getDeviceNameUseCase;
         this.setDeviceNameUseCase = setDeviceNameUseCase;
@@ -164,7 +169,13 @@ public class ToolbarViewModel implements ViewModel {
                                 .observeOn(schedulersFacade.ui())
                                 .doOnSubscribe(__ -> otmResponse.setValue(Response.loading()))
                                 .subscribe(
-                                        ownedDevice -> otmResponse.setValue(Response.success(ownedDevice)),
+                                        ownedDevice -> createAclUseCase.execute(ownedDevice, true, Arrays.asList("*"), 31)
+                                                        .subscribeOn(schedulersFacade.io())
+                                                        .observeOn(schedulersFacade.ui())
+                                                        .subscribe(
+                                                                () -> otmResponse.setValue(Response.success(ownedDevice)),
+                                                                throwable -> otmResponse.setValue(Response.error(throwable))
+                                                        ),
                                         throwable -> otmResponse.setValue(Response.error(throwable))
                                 ),
                         throwable -> otmResponse.setValue(Response.error(throwable))

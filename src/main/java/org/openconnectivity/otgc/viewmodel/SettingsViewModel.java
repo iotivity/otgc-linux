@@ -21,14 +21,22 @@ package org.openconnectivity.otgc.viewmodel;
 
 import de.saxsys.mvvmfx.ViewModel;
 import io.reactivex.disposables.CompositeDisposable;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableListValue;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import org.openconnectivity.otgc.utils.constant.DiscoveryScope;
 import org.openconnectivity.otgc.utils.rx.SchedulersFacade;
 import org.openconnectivity.otgc.domain.usecase.setting.GetSettingUseCase;
 import org.openconnectivity.otgc.domain.usecase.setting.UpdateSettingUseCase;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class SettingsViewModel implements ViewModel {
 
@@ -40,10 +48,22 @@ public class SettingsViewModel implements ViewModel {
 
     private static final String DISCOVERY_TIMEOUT_KEY = "discovery_timeout";
     private static final String DISCOVERY_TIMEOUT_DEFAULT = "5";
+    private static final String DISCOVERY_SCOPE_KEY = "discovery_scope";
+    private static final String DISCOVERY_SCOPE_DEFAULT = "Link-Local";
 
     private StringProperty discoveryTimeout = new SimpleStringProperty();
     public StringProperty discoveryTimeoutProperty() {
         return discoveryTimeout;
+    }
+
+    private ListProperty<String> discoveryScope = new SimpleListProperty<>();
+    public ListProperty<String> discoveryScopeProperty() {
+        return discoveryScope;
+    }
+
+    private StringProperty selectedDiscoveryScope = new SimpleStringProperty();
+    public StringProperty selectedDiscoveryScopeProperty() {
+        return selectedDiscoveryScope;
     }
 
     @Inject
@@ -58,10 +78,25 @@ public class SettingsViewModel implements ViewModel {
     public void initialize() {
         discoveryTimeout.setValue(getSettingUseCase.execute(DISCOVERY_TIMEOUT_KEY, DISCOVERY_TIMEOUT_DEFAULT));
         discoveryTimeoutProperty().addListener(this::discoveryTimeoutListener);
+
+        String scopeList[] = { DiscoveryScope.DISCOVERY_SCOPE_LINK,
+                DiscoveryScope.DISCOVERY_SCOPE_SITE,
+                DiscoveryScope.DISCOVERY_SCOPE_REALM};
+
+        discoveryScopeProperty().setValue(FXCollections.observableArrayList(scopeList));
+        selectedDiscoveryScope.setValue(getSettingUseCase.execute(DISCOVERY_SCOPE_KEY, DISCOVERY_SCOPE_DEFAULT));
+        selectedDiscoveryScopeProperty().addListener(this::discoveryScopeListener);
     }
 
     public void discoveryTimeoutListener(ObservableValue<? extends  String> observableValue, String oldValue, String newValue) {
         disposables.add(updateSettingUseCase.execute(DISCOVERY_TIMEOUT_KEY, newValue)
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe());
+    }
+
+    public void discoveryScopeListener (ObservableValue<? extends  String> observableValue, String oldValue, String newValue) {
+        disposables.add(updateSettingUseCase.execute(DISCOVERY_SCOPE_KEY, newValue)
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .subscribe());
