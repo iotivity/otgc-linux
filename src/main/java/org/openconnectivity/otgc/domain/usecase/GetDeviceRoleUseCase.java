@@ -20,24 +20,38 @@
 package org.openconnectivity.otgc.domain.usecase;
 
 import io.reactivex.Single;
+import org.openconnectivity.otgc.data.repository.SettingRepository;
 import org.openconnectivity.otgc.domain.model.resource.virtual.res.OcResource;
 import org.openconnectivity.otgc.utils.constant.OcfResourceType;
 import org.openconnectivity.otgc.data.repository.IotivityRepository;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.domain.model.devicelist.DeviceRole;
+import org.openconnectivity.otgc.utils.constant.OcfResourceUri;
+import org.openconnectivity.otgc.utils.rx.SchedulersFacade;
 
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
 public class GetDeviceRoleUseCase {
+    /* Repositories */
     private final IotivityRepository iotivityRepository;
+    private final SettingRepository settingRepository;
+    /* Scheduler */
+    private final SchedulersFacade schedulersFacade;
 
     @Inject
-    public GetDeviceRoleUseCase(IotivityRepository iotivityRepository) {
+    public GetDeviceRoleUseCase(IotivityRepository iotivityRepository,
+                                SettingRepository settingRepository,
+                                SchedulersFacade schedulersFacade) {
         this.iotivityRepository = iotivityRepository;
+        this.settingRepository = settingRepository;
+
+        this.schedulersFacade = schedulersFacade;
     }
 
     public Single<DeviceRole> execute(Device device) {
+        int delay = Integer.parseInt(settingRepository.get(SettingRepository.REQUESTS_DELAY_KEY, SettingRepository.REQUESTS_DELAY_DEFAULT_VALUE));
+
         return iotivityRepository.getNonSecureEndpoint(device)
                 .flatMap(endpoint ->
                         iotivityRepository.findResources(endpoint)
@@ -46,7 +60,8 @@ public class GetDeviceRoleUseCase {
                            DeviceRole deviceRole = DeviceRole.CLIENT;
                            for (OcResource resource : ocRes.getResourceList()) {
                                for (String resourceType : resource.getResourceTypes()) {
-                                   if (OcfResourceType.isVerticalResourceType(resourceType)) {
+                                   if (OcfResourceType.isVerticalResourceType(resourceType)
+                                           && !resource.getHref().equals(OcfResourceUri.DEVICE_INFO_URI)) {
                                        deviceRole = DeviceRole.SERVER;
                                        break;
                                    }
@@ -56,6 +71,7 @@ public class GetDeviceRoleUseCase {
                                    break;
                            }
                            return deviceRole;
-                        }));
+                        }))
+                .delay(delay, TimeUnit.SECONDS, schedulersFacade.ui());
     }
 }
