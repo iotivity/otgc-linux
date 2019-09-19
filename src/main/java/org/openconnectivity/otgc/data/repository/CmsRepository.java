@@ -20,7 +20,6 @@
 package org.openconnectivity.otgc.data.repository;
 
 import io.reactivex.Completable;
-import io.reactivex.CompletableSource;
 import io.reactivex.Single;
 import org.apache.log4j.Logger;
 import org.iotivity.*;
@@ -46,8 +45,7 @@ public class CmsRepository {
 
     public Single<OcCredentials> getCredentials(String endpoint, String deviceId) {
         return Single.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 
@@ -74,8 +72,7 @@ public class CmsRepository {
 
     public Single<OcCsr> retrieveCsr(String endpoint, String deviceId) {
         return Single.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 
@@ -100,8 +97,7 @@ public class CmsRepository {
 
     public Completable provisionTrustAnchor(String endpoint, String deviceId, String rootCert) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid di = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, di);
 
@@ -153,8 +149,7 @@ public class CmsRepository {
         return provisionTrustAnchor(endpoint, deviceId, rootCert)
             .andThen(
                 Completable.create(emitter -> {
-                    OCEndpoint ep = OCEndpointUtil.newEndpoint();
-                    OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+                    OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
                     OCUuid di = OCUuidUtil.stringToUuid(deviceId);
                     OCEndpointUtil.setDi(ep, di);
 
@@ -202,10 +197,29 @@ public class CmsRepository {
                 }));
     }
 
+    public Completable provisionIdentityCertificate(String deviceId) {
+        return Completable.create(emitter -> {
+            OCUuid di = OCUuidUtil.stringToUuid(deviceId);
+
+            OCObtStatusHandler handler = (int status) -> {
+                if (status >= 0) {
+                    LOG.debug("Provision identity certificate succeeded");
+                    emitter.onComplete();
+                } else {
+                    emitter.onError(new IOException("Provision identity certificate error"));
+                }
+            };
+
+            int ret = OCObt.provisionIdentityCertificate(di, handler);
+            if (ret < 0) {
+                emitter.onError(new IOException("Provision identity certificate error"));
+            }
+        });
+    }
+
     public Completable provisionRoleCertificate(String endpoint, String deviceId, String roleCert, String roleId, String roleAuthority) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid di = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, di);
 
@@ -258,10 +272,33 @@ public class CmsRepository {
         });
     }
 
+    public Completable provisionRoleCertificate(String deviceId, String roleId, String roleAuthority) {
+        return Completable.create(emitter -> {
+            OCUuid di = OCUuidUtil.stringToUuid(deviceId);
+
+            OCRole role = new OCRole();
+            role.setRole(roleId);
+            role.setAuthority(roleAuthority);
+
+            OCObtStatusHandler handler = (int status) -> {
+                if (status >= 0) {
+                    LOG.debug("Provision role certificate succeeded");
+                    emitter.onComplete();
+                } else {
+                    emitter.onError(new IOException("Provision role certificate error"));
+                }
+            };
+
+            int ret = OCObt.provisionRoleCertificate(role, di, handler);
+            if (ret < 0) {
+                emitter.onError(new IOException("Provision role certificate error"));
+            }
+        });
+    }
+
     public Completable createPskCredential(String endpoint, String deviceId, String targetUuid, byte[] symmetricKey) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid di = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, di);
 
@@ -308,10 +345,36 @@ public class CmsRepository {
         });
     }
 
+    public Completable provisionPairwiseCredential(String clientId, String serverId) {
+        return Completable.create(emitter -> {
+            OCUuid cliendDi = OCUuidUtil.stringToUuid(clientId);
+            OCUuid serverDi = OCUuidUtil.stringToUuid(serverId);
+
+            OCObtStatusHandler handler = (int status) -> {
+                if (status >= 0) {
+                    LOG.debug("Successfully provisioned pair-wise credentials");
+                    emitter.onComplete();
+                } else {
+                    String errorMsg = "ERROR provisioning pair-wise credentials";
+                    LOG.error(errorMsg);
+                    emitter.onError(new Exception(errorMsg));
+                }
+            };
+
+            int ret = OCObt.provisionPairwiseCredentials(cliendDi, serverDi, handler);
+            if (ret >= 0) {
+                LOG.debug("Successfully issued request to provision credentials");
+            } else {
+                String errorMsg = "ERROR issuing request to provision credentials";
+                LOG.error(errorMsg);
+                emitter.onError(new Exception(errorMsg));
+            }
+        });
+    }
+
     public Completable deleteCredential(String endpoint, String deviceId, long credId) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 

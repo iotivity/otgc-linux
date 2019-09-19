@@ -83,7 +83,7 @@ public class CredentialView implements FxmlView<CredentialViewModel>, Initializa
     }
 
     @FXML
-    public void handleCertificateGroup() {
+    public void handleCredentialGroup() {
         if (identityRadioButton.isSelected()) {
             roleBox.setDisable(true);
         } else if (roleRadioButton.isSelected()) {
