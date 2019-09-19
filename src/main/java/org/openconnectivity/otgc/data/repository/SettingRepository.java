@@ -44,6 +44,8 @@ public class SettingRepository {
     public static final String FIRST_RUN_DEFAULT_VALUE = "true";
     public static final String DISCOVERY_SCOPE_KEY = "discovery_scope";
     public static final String DISCOVERY_SCOPE_DEFAULT_VALUE = "Link-Local";
+    public static final String REQUESTS_DELAY_KEY = "requests_delay";
+    public static final String REQUESTS_DELAY_DEFAULT_VALUE = "1";
 
 
     @Inject

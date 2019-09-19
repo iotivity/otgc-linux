@@ -63,15 +63,30 @@
                                                           AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" />
                                         </children>
                                     </AnchorPane>
-                                    <!-- Row 1 : Discovery scope -->
+                                    <!-- Row 1 : Requests delay -->
                                     <AnchorPane GridPane.rowIndex="1" GridPane.columnIndex="0">
+                                        <children>
+                                            <Label text="%settings.label.requests_delay" alignment="CENTER"
+                                                   AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"
+                                                   AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" />
+                                        </children>
+                                    </AnchorPane>
+                                    <AnchorPane GridPane.rowIndex="1" GridPane.columnIndex="2">
+                                        <children>
+                                            <JFXTextField fx:id="jfxRequestsDelay" alignment="CENTER"
+                                                          AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                                                          AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" />
+                                        </children>
+                                    </AnchorPane>
+                                    <!-- Row 2 : Discovery scope -->
+                                    <AnchorPane GridPane.rowIndex="2" GridPane.columnIndex="0">
                                         <children>
                                             <Label text="%settings.label.discovery_scope" alignment="CENTER"
                                                    AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"
                                                    AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0" />
                                         </children>
                                     </AnchorPane>
-                                    <AnchorPane GridPane.rowIndex="1" GridPane.columnIndex="2">
+                                    <AnchorPane GridPane.rowIndex="2" GridPane.columnIndex="2">
                                         <children>
                                             <JFXComboBox fx:id="jfxDiscoveryScope"
                                                          AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"

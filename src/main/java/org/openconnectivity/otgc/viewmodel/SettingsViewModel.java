@@ -50,6 +50,8 @@ public class SettingsViewModel implements ViewModel {
     private static final String DISCOVERY_TIMEOUT_DEFAULT = "5";
     private static final String DISCOVERY_SCOPE_KEY = "discovery_scope";
     private static final String DISCOVERY_SCOPE_DEFAULT = "Link-Local";
+    private static final String REQUESTS_DELAY_KEY = "requests_delay";
+    private static final String REQUESTS_DELAY_DEFAULT_VALUE = "1";
 
     private StringProperty discoveryTimeout = new SimpleStringProperty();
     public StringProperty discoveryTimeoutProperty() {
@@ -64,6 +66,11 @@ public class SettingsViewModel implements ViewModel {
     private StringProperty selectedDiscoveryScope = new SimpleStringProperty();
     public StringProperty selectedDiscoveryScopeProperty() {
         return selectedDiscoveryScope;
+    }
+
+    private StringProperty requestsDelay = new SimpleStringProperty();
+    public StringProperty requestsDelayProperty() {
+        return requestsDelay;
     }
 
     @Inject
@@ -86,6 +93,9 @@ public class SettingsViewModel implements ViewModel {
         discoveryScopeProperty().setValue(FXCollections.observableArrayList(scopeList));
         selectedDiscoveryScope.setValue(getSettingUseCase.execute(DISCOVERY_SCOPE_KEY, DISCOVERY_SCOPE_DEFAULT));
         selectedDiscoveryScopeProperty().addListener(this::discoveryScopeListener);
+
+        requestsDelay.setValue(getSettingUseCase.execute(REQUESTS_DELAY_KEY, REQUESTS_DELAY_DEFAULT_VALUE));
+        requestsDelayProperty().addListener(this::requestsDelayListener);
     }
 
     public void discoveryTimeoutListener(ObservableValue<? extends  String> observableValue, String oldValue, String newValue) {
@@ -97,6 +107,13 @@ public class SettingsViewModel implements ViewModel {
 
     public void discoveryScopeListener (ObservableValue<? extends  String> observableValue, String oldValue, String newValue) {
         disposables.add(updateSettingUseCase.execute(DISCOVERY_SCOPE_KEY, newValue)
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe());
+    }
+
+    public void requestsDelayListener(ObservableValue<? extends  String> observableValue, String oldValue, String newValue) {
+        disposables.add(updateSettingUseCase.execute(REQUESTS_DELAY_KEY, newValue)
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .subscribe());
