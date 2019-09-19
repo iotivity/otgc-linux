@@ -73,16 +73,18 @@ public class ResourceRepository {
     public Completable cancelObserve(String resourceUri) {
         return Completable.create(emitter -> {
             OCEndpoint ep = observeMap.get(resourceUri);
-            if (!OCMain.stopObserve(resourceUri, ep)) {
-                emitter.onError(new Exception("Stop observe resource " + resourceUri + " error"));
+            if (ep != null) {
+                if (OCMain.stopObserve(resourceUri, ep)) {
+                    // Delete callback from map
+                    OCEndpointUtil.freeEndpoint(ep);
+                    observeMap.remove(resourceUri);
+                    ObservableEmitter observableEmitter = emitterMap.get(resourceUri);
+                    observableEmitter.onComplete();
+                    emitterMap.remove(resourceUri);
+                } else {
+                    emitter.onError(new Exception("Stop observe resource " + resourceUri + " error"));
+                }
             }
-
-            // Delete callback from map
-            OCEndpointUtil.freeEndpoint(ep);
-            observeMap.remove(resourceUri);
-            ObservableEmitter observableEmitter = emitterMap.get(resourceUri);
-            observableEmitter.onComplete();
-            emitterMap.remove(resourceUri);
 
             emitter.onComplete();
         });
