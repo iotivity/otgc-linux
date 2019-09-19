@@ -52,6 +52,10 @@ public class MenuViewModel implements ViewModel {
     public void initialize() {
         notificationCenter.subscribe(NotificationKey.OIC_STACK_INITIALIZED,
                 (key, payload) -> deviceUuid.setValue(getDeviceIdUseCase.execute().blockingGet()));
+        notificationCenter.subscribe(NotificationKey.OTGC_RESET,
+                (key, payload) -> deviceUuid.setValue(getDeviceIdUseCase.execute().blockingGet()));
+        notificationCenter.subscribe(NotificationKey.REFRESH_ID,
+                (key, payload) -> deviceUuid.setValue(getDeviceIdUseCase.execute().blockingGet()));
     }
 
     public void closeAction() {

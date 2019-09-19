@@ -29,6 +29,7 @@ import org.iotivity.OCObt;
 import org.iotivity.OCPki;
 import org.openconnectivity.otgc.utils.constant.OtgcConstant;
 import org.openconnectivity.otgc.data.repository.*;
+import org.openconnectivity.otgc.utils.constant.OtgcMode;
 
 import javax.inject.Inject;
 import java.security.*;
@@ -60,7 +61,8 @@ public class InitOicStackUseCase {
         Completable completable;
         if (Boolean.valueOf(settingRepository.get(SettingRepository.FIRST_RUN_KEY, SettingRepository.FIRST_RUN_DEFAULT_VALUE))) {
             completable = initOic
-                    .andThen(settingRepository.set(SettingRepository.FIRST_RUN_KEY, "false"));
+                    .andThen(settingRepository.set(SettingRepository.FIRST_RUN_KEY, "false"))
+                    .andThen(settingRepository.set(SettingRepository.MODE_KEY, OtgcMode.OBT));
         } else {
             completable = initOic;
         }

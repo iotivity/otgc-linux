@@ -35,10 +35,12 @@
                            onAction="#handleOnboardButton" text="%toolbar.onboard" />
                 <JFXButton focusTraversable="false" fx:id="offboardButton"
                            onAction="#handleOffboardButton" text="%toolbar.offboard" />
-                <JFXButton focusTraversable="false" fx:id="rfotmButton"
-                           onAction="#handleRfotmButton" text="%toolbar.rfotm" />
-                <JFXButton focusTraversable="false" fx:id="rfnopButton"
-                           onAction="#handleRfnopButton" text="%toolbar.rfnop" />
+                <JFXButton focusTraversable="false" fx:id="obtModeButton"
+                           onAction="#handleObtModeButton" text="%toolbar.obt_mode" />
+                <JFXButton focusTraversable="false" fx:id="clientModeButton"
+                           onAction="#handleClientModeButton" text="%toolbar.client_mode" />
+                <JFXButton focusTraversable="false" fx:id="resetButton"
+                           onAction="#handleResetButton" text="%toolbar.reset" />
                 <JFXButton focusTraversable="false" fx:id="trustAnchorButton"
                            onAction="#handleTrustAnchorButton" text="%toolbar.trust_anchor" />
             </items>

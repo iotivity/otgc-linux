@@ -46,11 +46,13 @@ public class SettingRepository {
     public static final String DISCOVERY_SCOPE_DEFAULT_VALUE = "Link-Local";
     public static final String REQUESTS_DELAY_KEY = "requests_delay";
     public static final String REQUESTS_DELAY_DEFAULT_VALUE = "1";
+    public static final String MODE_KEY = "mode";
+    public static final String MODE_DEFAULT_VALUE = "Obt";
 
 
     @Inject
     public SettingRepository() {
-            configFile = new File(new File(".").getAbsolutePath() + File.separator + "data" + File.separator + CONFIG_FILE);
+        configFile = new File(new File(".").getAbsolutePath() + File.separator + "data" + File.separator + CONFIG_FILE);
     }
 
     public String get(String key, String defaultValue) {

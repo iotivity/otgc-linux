@@ -25,7 +25,9 @@ public class NotificationKey {
     public static final String UPDATE_DEVICE = "update_device";
     public static final String UPDATE_DEVICE_TYPE = "update_device_type";
     public static final String OIC_STACK_INITIALIZED = "oic_stack_init";
+    public static final String OTGC_RESET = "otgc_reset";
     public static final String SET_PROGRESS_STATUS = "set_progress_status";
     public static final String CANCEL_ALL_OBSERVERS = "cancel all observers";
     public static final String SHUTDOWN_OIC_STACK = "shutdown_oic_stack";
+    public static final String REFRESH_ID = "refresh_id";
 }

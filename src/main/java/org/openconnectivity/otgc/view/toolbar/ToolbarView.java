@@ -36,6 +36,8 @@ import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.utils.constant.OcfOxmType;
+import org.openconnectivity.otgc.utils.constant.OtgcConstant;
+import org.openconnectivity.otgc.utils.constant.OtgcMode;
 import org.openconnectivity.otgc.utils.util.DialogHelper;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
@@ -64,8 +66,8 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
 
     @FXML private JFXButton onboardButton;
     @FXML private JFXButton offboardButton;
-    @FXML private JFXButton rfotmButton;
-    @FXML private JFXButton rfnopButton;
+    @FXML private JFXButton clientModeButton;
+    @FXML private JFXButton obtModeButton;
     @FXML private JFXButton trustAnchorButton;
 
     private int positionBeingUpdated = 0;
@@ -79,12 +81,18 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         onboardButton.disableProperty().bind(viewModel.onboardButtonDisabled());
         offboardButton.disableProperty().bind(viewModel.offboardButtonDisabled());
 
+        //clientModeButton.disableProperty().bind(viewModel.clientModeButtonDisabled());
+        //obtModeButton.disableProperty().bind(viewModel.obtModeButtonDisabled());
+
         viewModel.setOxmListener(this::onGetOxM);
 
         viewModel.otmResponseProperty().addListener(this::processOtmResponse);
         viewModel.offboardResponseProperty().addListener(this::processOffboardResponse);
-        viewModel.rfotmResponseProperty().addListener(this::processRfotmResponse);
-        viewModel.rfnopResponseProperty().addListener(this::processRfnopResponse);
+        viewModel.clientModeResponseProperty().addListener(this::processClientModeResponse);
+        viewModel.obtModeResponseProperty().addListener(this::processObtModeResponse);
+        viewModel.modeResponseProperty().addListener(this::processModeResponse);
+
+        notificationCenter.subscribe(NotificationKey.OIC_STACK_INITIALIZED, (key, payload) -> viewModel.getMode());
     }
 
     public OcfOxmType onGetOxM(List<OcfOxmType> supportedOxm) {
@@ -164,13 +172,22 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
     }
 
     @FXML
-    public void handleRfotmButton() {
-        viewModel.setRfotmMode();
+    public void handleClientModeButton() {
+        showConfirmSetMode(OtgcMode.CLIENT);
     }
 
     @FXML
-    public void handleRfnopButton() {
-        viewModel.setRfnopMode();
+    public void handleObtModeButton() {
+        showConfirmSetMode(OtgcMode.OBT);
+    }
+
+    @FXML
+    public void handleResetButton() {
+        if (obtModeButton.isDisable()) {
+            showConfirmSetMode(OtgcMode.OBT);
+        } else if (clientModeButton.isDisable()) {
+            showConfirmSetMode(OtgcMode.CLIENT);
+        }
     }
 
     @FXML
@@ -190,6 +207,8 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 if (newValue.data != null) {
                     showSetDeviceNameDialog(positionBeingUpdated, newValue.data, newValue.data.getDeviceId(), newValue.data.getDeviceInfo().getName());
                     positionBeingUpdated = 0;
+                } else {
+                    Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.error_client_mode"));
                 }
                 break;
             case ERROR:
@@ -211,6 +230,8 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 if (newValue.data != null) {
                     viewModel.updateItem(positionBeingUpdated, newValue.data);
                     positionBeingUpdated = 0;
+                } else {
+                    Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.error_client_mode"));
                 }
                 break;
             default:
@@ -220,31 +241,52 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         }
     }
 
-    private void processRfotmResponse(ObservableValue<? extends Response<Void>> observableValue, Response<Void> oldValue, Response<Void> newValue) {
+    private void processClientModeResponse(ObservableValue<? extends Response<Void>> observableValue, Response<Void> oldValue, Response<Void> newValue) {
         switch (newValue.status) {
             case LOADING:
-                Toast.show(primaryStage, resourceBundle.getString("toolbar.rfotm.load"));
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.client_mode.load"));
                 break;
             case SUCCESS:
-                viewModel.retrieveDeviceId();
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.client_mode.success"));
+                notificationCenter.publish(NotificationKey.OTGC_RESET);
                 viewModel.onScanPressed();
                 break;
             default:
-                Toast.show(primaryStage, resourceBundle.getString("toolbar.rfotm.error"));
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.client_mode.error"));
                 break;
         }
     }
 
-    private void processRfnopResponse(ObservableValue<? extends Response<Void>> observableValue, Response<Void> oldValue, Response<Void> newValue) {
+    private void processObtModeResponse(ObservableValue<? extends Response<Void>> observableValue, Response<Void> oldValue, Response<Void> newValue) {
         switch (newValue.status) {
             case LOADING:
-                Toast.show(primaryStage, resourceBundle.getString("toolbar.rfnop.load"));
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.obt_mode.load"));
                 break;
             case SUCCESS:
-                Toast.show(primaryStage, resourceBundle.getString("toolbar.rfnop.success"));
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.obt_mode.success"));
+                notificationCenter.publish(NotificationKey.OTGC_RESET);
+                viewModel.onScanPressed();
                 break;
             default:
-                Toast.show(primaryStage, resourceBundle.getString("toolbar.rfnop.error"));
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.obt_mode.error"));
+                break;
+        }
+    }
+
+    private void processModeResponse(ObservableValue<? extends Response<String>> observableValue, Response<String> oldValue, Response<String> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                if (newValue.data.equals(OtgcMode.CLIENT)) {
+                    clientModeButton.setDisable(true);
+                    obtModeButton.setDisable(false);
+                } else if (newValue.data.equals(OtgcMode.OBT)) {
+                    obtModeButton.setDisable(true);
+                    clientModeButton.setDisable(false);
+                }
+                break;
+            case ERROR:
                 break;
         }
     }
@@ -267,6 +309,29 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 viewModel.setDeviceName(deviceId, input.getText());
                 device.getDeviceInfo().setName(input.getText());
                 viewModel.updateItem(position, device);
+            }
+        });
+    }
+
+    private void showConfirmSetMode(String mode) {
+        Platform.runLater(() -> {
+            ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+
+            Alert alertDialog = new Alert(Alert.AlertType.CONFIRMATION);
+            alertDialog.setHeaderText(resourceBundle.getString("dialog.title.confirm_reset_mode"));
+            alertDialog.setContentText("Are you sure you want to delete the currently\n" +
+                                       "ACEs and credentials to change the device mode\n" +
+                                       "to " + mode + " mode?");
+            alertDialog.getButtonTypes().clear();
+            alertDialog.getButtonTypes().add(okButton);
+
+            Optional<ButtonType> result = alertDialog.showAndWait();
+            if (result.get() == okButton) {
+                if (mode.equals(OtgcMode.OBT)) {
+                    viewModel.setObtMode();
+                } else if (mode.equals(OtgcMode.CLIENT)) {
+                    viewModel.setClientMode();
+                }
             }
         });
     }
