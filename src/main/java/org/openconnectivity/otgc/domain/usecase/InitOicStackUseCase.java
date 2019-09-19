@@ -25,6 +25,7 @@ import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.sec.ECPrivateKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.iotivity.OCFactoryPresetsHandler;
+import org.iotivity.OCObt;
 import org.iotivity.OCPki;
 import org.openconnectivity.otgc.utils.constant.OtgcConstant;
 import org.openconnectivity.otgc.data.repository.*;
@@ -59,7 +60,6 @@ public class InitOicStackUseCase {
         Completable completable;
         if (Boolean.valueOf(settingRepository.get(SettingRepository.FIRST_RUN_KEY, SettingRepository.FIRST_RUN_DEFAULT_VALUE))) {
             completable = initOic
-                    .andThen(makeRootAndIdentityCertificates(0))
                     .andThen(settingRepository.set(SettingRepository.FIRST_RUN_KEY, "false"));
         } else {
             completable = initOic;
@@ -77,49 +77,41 @@ public class InitOicStackUseCase {
         }
     });
     private void factoryResetHandler(long device) throws Exception {
+        String uuid = iotivityRepository.getDeviceId().blockingGet();
+
         // Store root CA as trusted anchor
         X509Certificate caCertificate = ioRepository.getAssetAsX509Certificate(OtgcConstant.ROOT_CERTIFICATE).blockingGet();
+        PrivateKey caPrivateKey = ioRepository.getAssetAsPrivateKey(OtgcConstant.ROOT_PRIVATE_KEY).blockingGet();
+
         String strCACertificate = certRepository.x509CertificateToPemString(caCertificate).blockingGet();
         if (OCPki.addTrustAnchor(device, strCACertificate.getBytes()) == -1) {
             throw new Exception("Add trust anchor error");
         }
+        if (OCPki.addMfgTrustAnchor(device, strCACertificate.getBytes()) == -1) {
+            throw new Exception("Add manufacturer trust anchor error");
+        }
 
-        // TODO: Store default doxm, pstat, acl2 and cred
-    }
+        // public/private key pair that we are creating certificate for
+        ECGenParameterSpec ecParamSpec = new ECGenParameterSpec("secp256r1");
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
+        keyPairGenerator.initialize(ecParamSpec);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-    private Completable makeRootAndIdentityCertificates(long device) {
-        return Completable.create(emitter -> {
-            String uuid = iotivityRepository.getDeviceId().blockingGet();
-            X509Certificate caCertificate = ioRepository.getAssetAsX509Certificate(OtgcConstant.ROOT_CERTIFICATE).blockingGet();
-            PrivateKey caPrivateKey = ioRepository.getAssetAsPrivateKey(OtgcConstant.ROOT_PRIVATE_KEY).blockingGet();
+        // Public key
+        PublicKey publicKey = keyPair.getPublic();
+        // PrivateKey
+        ASN1Sequence pkSeq = (ASN1Sequence)ASN1Sequence.fromByteArray(keyPair.getPrivate().getEncoded());
+        PrivateKeyInfo pkInfo = PrivateKeyInfo.getInstance(pkSeq);
+        ECPrivateKey privateKey = ECPrivateKey.getInstance(pkInfo.parsePrivateKey());
+        String strPrivateKey = certRepository.privateKeyToPemString(privateKey).blockingGet();
 
-            String strCACertificate = certRepository.x509CertificateToPemString(caCertificate).blockingGet();
-            if (OCPki.addMfgTrustAnchor(device, strCACertificate.getBytes()) == -1) {
-                emitter.onError(new Exception("Add manufacturer trust anchor error"));
-            }
+        X509Certificate identityCertificate = certRepository.generateIdentityCertificate(uuid, publicKey, caPrivateKey).blockingGet();
+        String strIdentityCertificate = certRepository.x509CertificateToPemString(identityCertificate).blockingGet();
+        if (OCPki.addMfgCert(device, strIdentityCertificate.getBytes(), strPrivateKey.getBytes()) == -1) {
+            throw  new Exception("Add identity certificate error");
+        }
 
-            // public/private key pair that we are creating certificate for
-            ECGenParameterSpec ecParamSpec = new ECGenParameterSpec("secp256r1");
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
-            keyPairGenerator.initialize(ecParamSpec);
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-            // Public key
-            PublicKey publicKey = keyPair.getPublic();
-            // PrivateKey
-            ASN1Sequence pkSeq = (ASN1Sequence)ASN1Sequence.fromByteArray(keyPair.getPrivate().getEncoded());
-            PrivateKeyInfo pkInfo = PrivateKeyInfo.getInstance(pkSeq);
-            ECPrivateKey privateKey = ECPrivateKey.getInstance(pkInfo.parsePrivateKey());
-            String strPrivateKey = certRepository.privateKeyToPemString(privateKey).blockingGet();
-
-            X509Certificate identityCertificate = certRepository.generateIdentityCertificate(uuid, publicKey, caPrivateKey).blockingGet();
-            String strIdentityCertificate = certRepository.x509CertificateToPemString(identityCertificate).blockingGet();
-            if (OCPki.addMfgCert(device, strIdentityCertificate.getBytes(), strPrivateKey.getBytes()) == -1) {
-                emitter.onError(new Exception("Add manufacturer certificate error"));
-            }
-
-            emitter.onComplete();
-        });
+        OCObt.shutdown();
     }
 
 }
