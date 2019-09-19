@@ -39,6 +39,7 @@ public class SettingsView implements FxmlView<SettingsViewModel>, Initializable 
 
     @FXML private JFXTextField jfxDiscoveryTimeout;
     @FXML private JFXComboBox<String> jfxDiscoveryScope;
+    @FXML private JFXTextField jfxRequestsDelay;
 
 
     @Override
@@ -51,5 +52,8 @@ public class SettingsView implements FxmlView<SettingsViewModel>, Initializable 
         jfxDiscoveryScope.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
             viewModel.selectedDiscoveryScopeProperty().setValue(newValue);
         }));
+
+        jfxRequestsDelay.textProperty().bindBidirectional(viewModel.requestsDelayProperty());
+        jfxRequestsDelay.setTextFormatter(new TextFormatter<>(PositiveIntegerValidator.getFilter()));
     }
 }

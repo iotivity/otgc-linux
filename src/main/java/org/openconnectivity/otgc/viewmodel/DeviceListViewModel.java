@@ -21,6 +21,7 @@ package org.openconnectivity.otgc.viewmodel;
 
 import de.saxsys.mvvmfx.InjectScope;
 import de.saxsys.mvvmfx.ViewModel;
+import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
@@ -70,13 +71,21 @@ public class DeviceListViewModel implements ViewModel {
     @InjectScope
     private DeviceListToolbarDetailScope deviceListToolbarDetailScope;
 
+    @Inject
+    private NotificationCenter notificationCenter;
+
 
     public void initialize() {
         deviceListToolbarDetailScope.selectedDeviceProperty().bind(selectedDeviceProperty());
         deviceListToolbarDetailScope.positionSelectedDeviceProperty().bind(positionSelectedDeviceProperty());
         deviceListToolbarDetailScope.devicesListProperty().bind(devicesList);
         // Notification subscribe
-        deviceListToolbarDetailScope.subscribe(NotificationKey.SCAN_DEVICES, ((key, payload) -> onDiscoverRequest()));
+        deviceListToolbarDetailScope.subscribe(NotificationKey.SCAN_DEVICES,
+                ((key, payload) -> {
+                    notificationCenter.publish(NotificationKey.REFRESH_ID);
+                    onDiscoverRequest();
+                })
+        );
         deviceListToolbarDetailScope.subscribe(NotificationKey.UPDATE_DEVICE, (key, payload) -> updateItem((int) payload[0], (Device) payload[1]));
         deviceListToolbarDetailScope.subscribe(NotificationKey.UPDATE_DEVICE_TYPE, (key, payload) -> updateDevice((Device)payload[0]));
     }

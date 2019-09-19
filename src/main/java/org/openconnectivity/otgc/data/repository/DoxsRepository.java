@@ -64,7 +64,7 @@ public class DoxsRepository {
                     if (status >= 0) {
                         LOG.debug("Successfully request Random PIN " + OCUuidUtil.uuidToString(ocUuid));
                         String pin = randomPinHandler.handler();
-                        if (OCObt.performRandomPinOtm(uuid, pin, pin.length(), handler) != -1){
+                        if (OCObt.performRandomPinOtm(uuid, pin, handler) != -1){
                             emitter.onComplete();
                         } else {
                             String error = "ERROR send random PIN on device " + OCUuidUtil.uuidToString(ocUuid);
@@ -119,8 +119,7 @@ public class DoxsRepository {
 
     public Single<OcDoxm> retrieveOTMethods(String endpoint) {
         return Single.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
 
             OCResponseHandler handler = (OCClientResponse response) -> {
                 OCStatus code = response.getCode();
@@ -155,8 +154,7 @@ public class DoxsRepository {
 
     public Single<OcDoxm> get(String endpoint, String deviceId) {
         return Single.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 
@@ -181,8 +179,7 @@ public class DoxsRepository {
 
     public Completable post(String endpoint, String deviceId, OcDoxm doxm) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 

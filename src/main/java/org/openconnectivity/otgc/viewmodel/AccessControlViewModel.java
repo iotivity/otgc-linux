@@ -51,6 +51,7 @@ import java.util.ResourceBundle;
 public class AccessControlViewModel implements ViewModel {
 
     private List<String> selectedVerticalResource = new ArrayList<>();
+    private List<String> wildcardList = new ArrayList<>();
     public ObjectProperty<Device> deviceProperty;
 
     @InjectScope
@@ -127,6 +128,11 @@ public class AccessControlViewModel implements ViewModel {
 
     public ObjectProperty<Response<List<String>>> retrieveVerticalResourcesResponseProperty() {
         return retrieveVerticalResourcesResponse;
+    }
+
+    public void setWildcardSelectedVerticalResource(String wildcard) {
+        wildcardList.clear();
+        wildcardList.add(wildcard);
     }
 
     public void loadAccessControl(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
@@ -245,8 +251,15 @@ public class AccessControlViewModel implements ViewModel {
         this.aceListProperty().setValue(FXCollections.observableArrayList(aceList));
     }
 
-    public void createAce(String subjectId, long permission) {
-        disposable.add(createAclUseCase.execute(deviceProperty.get(), subjectId, selectedVerticalResource, permission)
+    public void createAce(String subjectId, long permission, boolean isWildcard) {
+        List<String> resources;
+        if (isWildcard) {
+            resources = wildcardList;
+        } else {
+            resources = selectedVerticalResource;
+        }
+
+        disposable.add(createAclUseCase.execute(deviceProperty.get(), subjectId, resources, permission)
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
@@ -257,8 +270,15 @@ public class AccessControlViewModel implements ViewModel {
         );
     }
 
-    public void createAce(String roleId, String roleAuthority, long permission) {
-        disposable.add(createAclUseCase.execute(deviceProperty.get(), roleId, roleAuthority, selectedVerticalResource, permission)
+    public void createAce(String roleId, String roleAuthority, long permission, boolean isWildcard) {
+        List<String> resources;
+        if (isWildcard) {
+            resources = wildcardList;
+        } else {
+            resources = selectedVerticalResource;
+        }
+
+        disposable.add(createAclUseCase.execute(deviceProperty.get(), roleId, roleAuthority, resources, permission)
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
@@ -269,8 +289,15 @@ public class AccessControlViewModel implements ViewModel {
         );
     }
 
-    public void createAce(boolean isAuth, long permission) {
-        disposable.add(createAclUseCase.execute(deviceProperty.get(), isAuth, selectedVerticalResource, permission)
+    public void createAce(boolean isAuth, long permission, boolean isWildcard) {
+        List<String> resources;
+        if (isWildcard) {
+            resources = wildcardList;
+        } else {
+            resources = selectedVerticalResource;
+        }
+
+        disposable.add(createAclUseCase.execute(deviceProperty.get(), isAuth, resources, permission)
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))

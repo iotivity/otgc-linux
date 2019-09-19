@@ -28,6 +28,7 @@ import de.saxsys.mvvmfx.InjectViewModel;
 import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -39,6 +40,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.openconnectivity.otgc.domain.model.resource.secure.acl.OcAce;
 import org.openconnectivity.otgc.domain.model.resource.secure.acl.OcAcl;
+import org.openconnectivity.otgc.utils.constant.OcfWildcard;
 import org.openconnectivity.otgc.viewmodel.AccessControlViewModel;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.utils.util.Toast;
@@ -46,6 +48,7 @@ import org.openconnectivity.otgc.utils.viewmodel.Response;
 
 import javax.inject.Inject;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -74,6 +77,11 @@ public class AccessControlView implements FxmlView<AccessControlViewModel>, Init
     @FXML private VBox conntypeBox;
     @FXML private JFXRadioButton anonRadioButton;
     @FXML private JFXRadioButton authRadioButton;
+    @FXML private JFXCheckBox wildcardCheck;
+    @FXML private VBox wildcardBox;
+    @FXML private JFXCheckBox wcAll;
+    @FXML private JFXCheckBox wcAllSecure;
+    @FXML private JFXCheckBox wcAllPublic;
     @FXML private ListView<String> verticalResourcesList;
     @FXML private JFXCheckBox createCheck;
     @FXML private JFXCheckBox retrieveCheck;
@@ -92,6 +100,25 @@ public class AccessControlView implements FxmlView<AccessControlViewModel>, Init
 
         amsListView.itemsProperty().bind(viewModel.aceListProperty());
         amsListView.setCellFactory(aceListView -> new AceViewCell());
+
+        wcAll.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue) {
+                wcAllSecure.setSelected(false);
+                wcAllPublic.setSelected(false);
+            }
+        });
+        wcAllSecure.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue) {
+                wcAll.setSelected(false);
+                wcAllPublic.setSelected(false);
+            }
+        });
+        wcAllPublic.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue) {
+                wcAll.setSelected(false);
+                wcAllSecure.setSelected(false);
+            }
+        });
 
         verticalResourcesList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         verticalResourcesList.itemsProperty().bind(viewModel.verticalResourceListProperty());
@@ -129,6 +156,17 @@ public class AccessControlView implements FxmlView<AccessControlViewModel>, Init
         }
     }
 
+    @FXML
+    public void handleWildcardCheck() {
+        if (wildcardCheck.isSelected()) {
+            verticalResourcesList.setDisable(true);
+            wildcardBox.setDisable(false);
+        } else {
+            verticalResourcesList.setDisable(false);
+            wildcardBox.setDisable(true);
+        }
+    }
+
     private void processRetrieveAclResponse(ObservableValue<? extends Response<OcAcl>> observableValue, Response<OcAcl> oldValue, Response<OcAcl> newValue) {
         switch (newValue.status) {
             case LOADING:
@@ -148,21 +186,36 @@ public class AccessControlView implements FxmlView<AccessControlViewModel>, Init
     @FXML
     public void handleSaveACL() {
         boolean ok = false;
+        boolean isWildcard = false;
+
+        if (!wildcardBox.isDisable()) {
+            if (wcAll.isSelected()) {
+                isWildcard = true;
+                viewModel.setWildcardSelectedVerticalResource(OcfWildcard.OC_WILDCARD_ALL_NCR);
+            } else if (wcAllSecure.isSelected()) {
+                isWildcard = true;
+                viewModel.setWildcardSelectedVerticalResource(OcfWildcard.OC_WILDCARD_ALL_SECURE_NCR);
+            } else if (wcAllPublic.isSelected()) {
+                isWildcard = true;
+                viewModel.setWildcardSelectedVerticalResource(OcfWildcard.OC_WILDCARD_ALL_NON_SECURE_NCR);
+            }
+        }
+
         if (uuidRadioButton.isSelected()) {
             if (uuidTextField.getText() != null) {
                 ok = true;
-                viewModel.createAce(uuidTextField.getText(), calculatePermission());
+                viewModel.createAce(uuidTextField.getText(), calculatePermission(), isWildcard);
             }
         } else if (roleRadioButton.isSelected()) {
             if (roleidTextField.getText() != null && authorityTextField.getText() != null) {
                 ok = true;
                 String roleid = roleidTextField.getText();
                 String roleAuthority = authorityTextField.getText();
-                viewModel.createAce(roleid, roleAuthority, calculatePermission());
+                viewModel.createAce(roleid, roleAuthority, calculatePermission(), isWildcard);
             }
         } else if (conntypeRadioButton.isSelected()) {
             ok = true;
-            viewModel.createAce(authRadioButton.isSelected(), calculatePermission());
+            viewModel.createAce(authRadioButton.isSelected(), calculatePermission(), isWildcard);
         }
 
         if (!ok) {

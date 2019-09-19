@@ -40,8 +40,7 @@ public class PstatRepository {
 
     public Completable changeDeviceStatus(String endpoint, String deviceId, OcfDosType dosType) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 
@@ -79,8 +78,7 @@ public class PstatRepository {
 
     public Single<OcPstat> get(String endpoint, String deviceId) {
         return Single.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 
@@ -105,8 +103,7 @@ public class PstatRepository {
 
     public Completable post(String endpoint, String deviceId, OcPstat pstat) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.newEndpoint();
-            OCEndpointUtil.stringToEndpoint(endpoint, ep, new String[1]);
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
             OCEndpointUtil.setDi(ep, uuid);
 
