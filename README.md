@@ -24,29 +24,68 @@
 ## Overview
 
 ## Project Setup
-### IoTivity Base API
-To import the IoTivity Base API Binary into the OTGC Linux App project:
+### IoTivity-lite API
+To import the IoTivity-lite API Binary into the OTGC Linux App project:
 
 1. Create a new directory called `lib` in the project root.
-2. Build the IoTivity binary in linux.
 
-        scons BUILD_JAVA=1
+2. Create a new directory called `jni` into &lt;otgc-linux>/lib
 
-3. Copy the `iotivity.jar` into `lib` directory. This file is found in:
+3. Copy **iotivity.jar** into &lt;otgc-linux>/lib.
 
-        <iotivity>/out/linux/<your arch>/<release mode>/java/iotivity.jar
+4. Copy **libiotivity-lite.so** into &lt;otgc-linux>/lib/jni
 
-4. Add iotivity.jar to the libraries of the project.
+5. Add the following command, to link the previous libraries with iotivity.jar, in the run/debug configuration:
+```
+-Djava.library.path=<otgc-linux>/lib/jni
+```
 
-5. Copy the libraries (only .so files) for IoTivity into the `lib` directory. These libraries is found in:
 
-        <iotivity>/out/linux/<your arch>/<release mode>
-
-6. Add the following command, to link the previous libraries with iotivity.jar, in the run/debug configuration:
-
-        -Djava.library.path=<project directory>/lib/
 
 ## Build
+### IoTivity-lite Linux API
+
+The steps required to build the binary of the IoTivity-lite Linux API are shown below:
+
+1. Change to the swig branch.
+```
+git checkout swig
+```
+2. Go to the linux directory.
+```
+cd <iotivity-lite>/port/linux
+```
+3. Execute the command to build the library.
+```
+make DEBUG=1 SECURE=1 IPV4=1 TCP=0 PKI=1 DYNAMIC=1 CLOUD=0 JAVA=1 IDD=1
+```
+
+Once built, the library can be found at:
+```
+<iotivity-lite>/swig/iotivity-lite-java/libs
+```
+
+### OTGC
+
+The steps to build the OTGC are shown below:
+
+1. To build the project, execute the command:
+```
+mvn jfx:jar
+```
+2. When the project is built, go to the Debian directory
+```
+cd <otgc-linux>/build/debian
+```
+3. To create the Debian package, execute the command:
+```
+./otgc_native.sh <otgc-linux>/target/jfx/app
+```
+
+Once the Debian package is build, it can be found in:
+```
+<otgc-linux>/build/debian/out
+```
  
 ## Testing
   
