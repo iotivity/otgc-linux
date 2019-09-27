@@ -60,9 +60,10 @@ public class OnboardUseCase {
 
         return doxsRepository.doOwnershipTransfer(deviceToOnboard.getDeviceId(), oxm)
                 .delay(delay, TimeUnit.SECONDS, schedulersFacade.ui())
-                .andThen(getUpdatedOcSecureResource)
-                .onErrorResumeNext(error -> getUpdatedOcSecureResource
-                        .retry(2)
-                        .onErrorResumeNext(Single.error(error)));
+                .andThen(getUpdatedOcSecureResource
+                            .onErrorResumeNext(error -> getUpdatedOcSecureResource
+                                    .retry(2)
+                                    .onErrorResumeNext(Single.error(error)))
+                );
     }
 }

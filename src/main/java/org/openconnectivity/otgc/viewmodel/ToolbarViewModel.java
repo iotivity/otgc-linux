@@ -66,7 +66,9 @@ public class ToolbarViewModel implements ViewModel {
     private final GetDeviceNameUseCase getDeviceNameUseCase;
     private final SetDeviceNameUseCase setDeviceNameUseCase;
     private final SetClientModeUseCase setClientModeUseCase;
+    private final ResetClientModeUseCase resetClientModeUseCase;
     private final SetObtModeUseCase setObtModeUseCase;
+    private final ResetObtModeUseCase resetObtModeUseCase;
     private final GetModeUseCase getModeUseCase;
     private final GetDeviceIdUseCase getDeviceIdUseCase;
     private final OffboardDeviceUseCase offboardDeviceUseCase;
@@ -74,6 +76,9 @@ public class ToolbarViewModel implements ViewModel {
 
     // Observable responses
     private final ObjectProperty<Response<Device>> otmResponse = new SimpleObjectProperty<>();
+    private final ObjectProperty<Response<Device>> deviceInfoResponse = new SimpleObjectProperty<>();
+    private final ObjectProperty<Response<Device>> deviceRoleResponse = new SimpleObjectProperty<>();
+    private final ObjectProperty<Response<Device>> provisionAceOtmResponse = new SimpleObjectProperty<>();
     private final ObjectProperty<Response<Device>> offboardResponse = new SimpleObjectProperty<>();
     private final ObjectProperty<Response<Void>> clientModeResponse = new SimpleObjectProperty<>();
     private final ObjectProperty<Response<Void>> obtModeResponse = new SimpleObjectProperty<>();
@@ -88,18 +93,20 @@ public class ToolbarViewModel implements ViewModel {
 
     @Inject
     public ToolbarViewModel(SchedulersFacade schedulersFacade,
-                    GetOTMethodsUseCase getOTMethodsUseCase,
-                    OnboardUseCase onboardUseCase,
-                    CreateAclUseCase createAclUseCase,
-                    GetDeviceInfoUseCase getDeviceInfoUseCase,
-                    GetDeviceNameUseCase getDeviceNameUseCase,
-                    SetDeviceNameUseCase setDeviceNameUseCase,
-                    SetClientModeUseCase setClientModeUseCase,
-                    SetObtModeUseCase setObtModeUseCase,
-                    GetModeUseCase getModeUseCase,
-                    GetDeviceIdUseCase getDeviceIdUseCase,
-                    OffboardDeviceUseCase offboardDeviceUseCase,
-                    GetDeviceRoleUseCase getDeviceRoleUseCase) {
+                            GetOTMethodsUseCase getOTMethodsUseCase,
+                            OnboardUseCase onboardUseCase,
+                            CreateAclUseCase createAclUseCase,
+                            GetDeviceInfoUseCase getDeviceInfoUseCase,
+                            GetDeviceNameUseCase getDeviceNameUseCase,
+                            SetDeviceNameUseCase setDeviceNameUseCase,
+                            SetClientModeUseCase setClientModeUseCase,
+                            ResetClientModeUseCase resetClientModeUseCase,
+                            SetObtModeUseCase setObtModeUseCase,
+                            ResetObtModeUseCase resetObtModeUseCase,
+                            GetModeUseCase getModeUseCase,
+                            GetDeviceIdUseCase getDeviceIdUseCase,
+                            OffboardDeviceUseCase offboardDeviceUseCase,
+                            GetDeviceRoleUseCase getDeviceRoleUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.getOTMethodsUseCase = getOTMethodsUseCase;
         this.onboardUseCase = onboardUseCase;
@@ -108,7 +115,9 @@ public class ToolbarViewModel implements ViewModel {
         this.getDeviceNameUseCase = getDeviceNameUseCase;
         this.setDeviceNameUseCase = setDeviceNameUseCase;
         this.setClientModeUseCase = setClientModeUseCase;
+        this.resetClientModeUseCase = resetClientModeUseCase;
         this.setObtModeUseCase = setObtModeUseCase;
+        this.resetObtModeUseCase = resetObtModeUseCase;
         this.getModeUseCase = getModeUseCase;
         this.getDeviceIdUseCase = getDeviceIdUseCase;
         this.offboardDeviceUseCase = offboardDeviceUseCase;
@@ -117,7 +126,7 @@ public class ToolbarViewModel implements ViewModel {
 
     public ObservableBooleanValue onboardButtonDisabled() {
         return Bindings.createBooleanBinding(() -> deviceProperty.get() == null
-                        || deviceProperty.get().getDeviceType() != DeviceType.UNOWNED, deviceProperty);
+                || deviceProperty.get().getDeviceType() != DeviceType.UNOWNED, deviceProperty);
     }
 
     public ObservableBooleanValue offboardButtonDisabled() {
@@ -131,6 +140,18 @@ public class ToolbarViewModel implements ViewModel {
 
     public ObjectProperty<Response<Device>> otmResponseProperty() {
         return otmResponse;
+    }
+
+    public ObjectProperty<Response<Device>> deviceInfoProperty() {
+        return deviceInfoResponse;
+    }
+
+    public ObjectProperty<Response<Device>> deviceRoleProperty() {
+        return deviceRoleResponse;
+    }
+
+    public ObjectProperty<Response<Device>> provisionAceOtmProperty() {
+        return provisionAceOtmResponse;
     }
 
     public ObjectProperty<Response<Device>> offboardResponseProperty() {
@@ -166,27 +187,37 @@ public class ToolbarViewModel implements ViewModel {
                                         }).filter(oxm -> oxm != null)
                                         .subscribeOn(schedulersFacade.io())
                                         .observeOn(schedulersFacade.ui())
-                                        .doOnSubscribe(__ -> otmResponse.setValue(Response.loading()))
                                         .subscribe(
                                                 oxm -> onboardUseCase.execute(deviceToOnboard, oxm)
-                                                        .map(device -> {
-                                                            device.setDeviceInfo(getDeviceInfoUseCase.execute(device).blockingGet());
-                                                            return device;
-                                                        })
-                                                        .map(device -> {
-                                                            device.setDeviceRole(getDeviceRoleUseCase.execute(device).blockingGet());
-                                                            return device;
-                                                        })
                                                         .subscribeOn(schedulersFacade.io())
                                                         .observeOn(schedulersFacade.ui())
                                                         .doOnSubscribe(__ -> otmResponse.setValue(Response.loading()))
                                                         .subscribe(
-                                                                ownedDevice -> createAclUseCase.execute(ownedDevice, true, Arrays.asList("*"), 31)
+                                                                ownedDevice -> getDeviceInfoUseCase.execute(ownedDevice)
                                                                         .subscribeOn(schedulersFacade.io())
                                                                         .observeOn(schedulersFacade.ui())
                                                                         .subscribe(
-                                                                                () -> otmResponse.setValue(Response.success(ownedDevice)),
-                                                                                throwable -> otmResponse.setValue(Response.error(throwable))
+                                                                                deviceInfo -> {
+                                                                                    ownedDevice.setDeviceInfo(deviceInfo);
+                                                                                    getDeviceRoleUseCase.execute(ownedDevice)
+                                                                                            .subscribeOn(schedulersFacade.io())
+                                                                                            .observeOn(schedulersFacade.ui())
+                                                                                            .subscribe(
+                                                                                                    deviceRole -> {
+                                                                                                        ownedDevice.setDeviceRole(deviceRole);
+                                                                                                        deviceRoleResponse.setValue(Response.success(ownedDevice));
+                                                                                                        createAclUseCase.execute(ownedDevice, true, Arrays.asList("*"), 31)
+                                                                                                                .subscribeOn(schedulersFacade.io())
+                                                                                                                .observeOn(schedulersFacade.ui())
+                                                                                                                .subscribe(
+                                                                                                                        () -> {},
+                                                                                                                        throwable -> provisionAceOtmResponse.setValue(Response.error(throwable))
+                                                                                                                );
+                                                                                                    },
+                                                                                                    throwable -> deviceRoleResponse.setValue(Response.error(throwable))
+                                                                                            );
+                                                                                },
+                                                                                throwable -> deviceInfoResponse.setValue(Response.error(throwable))
                                                                         ),
                                                                 throwable -> otmResponse.setValue(Response.error(throwable))
                                                         ),
@@ -212,43 +243,53 @@ public class ToolbarViewModel implements ViewModel {
         disposables.add(getModeUseCase.execute()
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> otmResponse.setValue(Response.loading()))
                 .subscribe(
                         mode -> {
                             if (mode.equals(OtgcMode.OBT)) {
                                 offboardDeviceUseCase.execute(deviceToOffboard)
-                                        .map(device -> {
-                                            device.setDeviceInfo(getDeviceInfoUseCase.execute(device).blockingGet());
-                                            return device;
-                                        })
-                                        .map(device -> {
-                                            device.setDeviceRole(getDeviceRoleUseCase.execute(device).blockingGet());
-                                            return device;
-                                        })
                                         .subscribeOn(schedulersFacade.io())
                                         .observeOn(schedulersFacade.ui())
                                         .doOnSubscribe(__ -> offboardResponse.setValue(Response.loading()))
                                         .subscribe(
-                                                unownedDevice -> offboardResponse.setValue(Response.success(unownedDevice)),
+                                                unownedDevice -> getDeviceInfoUseCase.execute(unownedDevice)
+                                                        .subscribeOn(schedulersFacade.io())
+                                                        .observeOn(schedulersFacade.ui())
+                                                        .subscribe(
+                                                                deviceInfo -> {
+                                                                    unownedDevice.setDeviceInfo(deviceInfo);
+                                                                    getDeviceRoleUseCase.execute(unownedDevice)
+                                                                            .subscribeOn(schedulersFacade.io())
+                                                                            .observeOn(schedulersFacade.ui())
+                                                                            .subscribe(
+                                                                                    deviceRole -> {
+                                                                                        unownedDevice.setDeviceRole(deviceRole);
+                                                                                        deviceRoleResponse.setValue(Response.success(unownedDevice));
+                                                                                    },
+                                                                                    throwable -> deviceRoleResponse.setValue(Response.error(throwable))
+                                                                            );
+                                                                },
+                                                                throwable -> deviceInfoResponse.setValue(Response.error(throwable))
+                                                        ),
                                                 throwable -> offboardResponse.setValue(Response.error(throwable))
                                         );
                             } else {
-                                otmResponse.setValue(Response.success(null));
+                                offboardResponse.setValue(Response.success(null));
                             }
                         },
-                        throwable -> otmResponse.setValue(Response.error(throwable))
+                        throwable -> offboardResponse.setValue(Response.error(throwable))
+
                 ));
     }
 
     public void setDeviceName(String deviceId, String deviceName) {
         disposables.add(setDeviceNameUseCase.execute(deviceId, deviceName)
-            .andThen(getDeviceNameUseCase.execute(deviceId))
-            .subscribeOn(schedulersFacade.io())
-            .observeOn(schedulersFacade.ui())
-            .subscribe(
-                    name -> {},
-                    throwable -> {}
-            ));
+                .andThen(getDeviceNameUseCase.execute(deviceId))
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe(
+                        name -> {},
+                        throwable -> {}
+                ));
     }
 
     public void setClientMode() {
@@ -271,8 +312,49 @@ public class ToolbarViewModel implements ViewModel {
                 ));
     }
 
+    public void resetClientMode() {
+        disposables.add(resetClientModeUseCase.execute()
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .doOnSubscribe(__ -> clientModeResponse.setValue(Response.loading()))
+                .subscribe(
+                        () -> {
+                            clientModeResponse.setValue(Response.success(null));
+                            getModeUseCase.execute()
+                                    .subscribeOn(schedulersFacade.io())
+                                    .observeOn(schedulersFacade.ui())
+                                    .subscribe(
+                                            mode -> modeProperty.setValue(Response.success(mode)),
+                                            throwable -> {}
+                                    );
+                        },
+                        throwable -> clientModeResponse.setValue(Response.error(throwable))
+                ));
+    }
+
     public void setObtMode() {
         disposables.add(setObtModeUseCase.execute()
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .doOnSubscribe(__ -> obtModeResponse.setValue(Response.loading()))
+                .subscribe(
+                        () -> {
+                            obtModeResponse.setValue(Response.success(null));
+                            getModeUseCase.execute()
+                                    .subscribeOn(schedulersFacade.io())
+                                    .observeOn(schedulersFacade.ui())
+                                    .subscribe(
+                                            mode -> modeProperty.setValue(Response.success(mode)),
+                                            throwable -> {}
+                                    );
+                        },
+                        throwable -> obtModeResponse.setValue(Response.error(throwable))
+                )
+        );
+    }
+
+    public void resetObtMode() {
+        disposables.add(resetObtModeUseCase.execute()
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> obtModeResponse.setValue(Response.loading()))

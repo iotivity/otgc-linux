@@ -33,15 +33,14 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
+import org.openconnectivity.otgc.domain.model.devicelist.DeviceType;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.utils.constant.OcfOxmType;
-import org.openconnectivity.otgc.utils.constant.OtgcConstant;
 import org.openconnectivity.otgc.utils.constant.OtgcMode;
 import org.openconnectivity.otgc.utils.util.DialogHelper;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
-import org.openconnectivity.otgc.view.setting.SettingsView;
 import org.openconnectivity.otgc.view.trustanchor.TrustAnchorView;
 import org.openconnectivity.otgc.viewmodel.ToolbarViewModel;
 
@@ -87,6 +86,9 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         viewModel.setOxmListener(this::onGetOxM);
 
         viewModel.otmResponseProperty().addListener(this::processOtmResponse);
+        viewModel.deviceInfoProperty().addListener(this::processDeviceInfoResponse);
+        viewModel.deviceRoleProperty().addListener(this::processDeviceRoleResponse);
+        viewModel.provisionAceOtmProperty().addListener(this::processProvisionAceOtmResponse);
         viewModel.offboardResponseProperty().addListener(this::processOffboardResponse);
         viewModel.clientModeResponseProperty().addListener(this::processClientModeResponse);
         viewModel.obtModeResponseProperty().addListener(this::processObtModeResponse);
@@ -173,20 +175,20 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
 
     @FXML
     public void handleClientModeButton() {
-        showConfirmSetMode(OtgcMode.CLIENT);
+        showConfirmSetMode(OtgcMode.CLIENT, false);
     }
 
     @FXML
     public void handleObtModeButton() {
-        showConfirmSetMode(OtgcMode.OBT);
+        showConfirmSetMode(OtgcMode.OBT, false);
     }
 
     @FXML
     public void handleResetButton() {
         if (obtModeButton.isDisable()) {
-            showConfirmSetMode(OtgcMode.OBT);
+            showConfirmSetMode(OtgcMode.OBT, true);
         } else if (clientModeButton.isDisable()) {
-            showConfirmSetMode(OtgcMode.CLIENT);
+            showConfirmSetMode(OtgcMode.CLIENT, true);
         }
     }
 
@@ -204,10 +206,7 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 break;
             case SUCCESS:
                 notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
-                if (newValue.data != null) {
-                    showSetDeviceNameDialog(positionBeingUpdated, newValue.data, newValue.data.getDeviceId(), newValue.data.getDeviceInfo().getName());
-                    positionBeingUpdated = 0;
-                } else {
+                if (newValue.data == null) {
                     Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.error_client_mode"));
                 }
                 break;
@@ -215,6 +214,61 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
                 LOG.debug(newValue.message);
                 Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.error"));
+                break;
+        }
+    }
+
+    private void processDeviceInfoResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                break;
+            case ERROR:
+                notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
+                LOG.debug(newValue.message);
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.get_device_info.error"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void processDeviceRoleResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
+                if (newValue.data != null) {
+                    if (newValue.data.getDeviceType() == DeviceType.OWNED_BY_SELF) {
+                        showSetDeviceNameDialog(positionBeingUpdated, newValue.data, newValue.data.getDeviceId(), newValue.data.getDeviceInfo().getName());
+                    } else {
+                        viewModel.updateItem(positionBeingUpdated, newValue.data);
+                    }
+                    positionBeingUpdated = 0;
+                }
+                break;
+            case ERROR:
+                notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
+                LOG.debug(newValue.message);
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.get_device_role.error"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void processProvisionAceOtmResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                break;
+            case ERROR:
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.provision_ace_otm.error"));
+                break;
+            default:
                 break;
         }
     }
@@ -227,10 +281,7 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 break;
             case SUCCESS:
                 notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
-                if (newValue.data != null) {
-                    viewModel.updateItem(positionBeingUpdated, newValue.data);
-                    positionBeingUpdated = 0;
-                } else {
+                if (newValue.data == null) {
                     Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.error_client_mode"));
                 }
                 break;
@@ -313,25 +364,32 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         });
     }
 
-    private void showConfirmSetMode(String mode) {
+    private void showConfirmSetMode(String mode, boolean reset) {
         Platform.runLater(() -> {
             ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
 
             Alert alertDialog = new Alert(Alert.AlertType.CONFIRMATION);
             alertDialog.setHeaderText(resourceBundle.getString("dialog.title.confirm_reset_mode"));
-            alertDialog.setContentText("Are you sure you want to delete the currently\n" +
-                                       "ACEs and credentials to change the device mode\n" +
-                                       "to " + mode + " mode?");
+            alertDialog.setContentText(resourceBundle.getString("dialog.message.confirm_reset_mode"));
             alertDialog.getButtonTypes().clear();
             alertDialog.getButtonTypes().add(okButton);
 
             Optional<ButtonType> result = alertDialog.showAndWait();
             if (result.get() == okButton) {
-                if (mode.equals(OtgcMode.OBT)) {
-                    viewModel.setObtMode();
-                } else if (mode.equals(OtgcMode.CLIENT)) {
-                    viewModel.setClientMode();
+                if (reset) {
+                    if (mode.equals(OtgcMode.OBT)) {
+                        viewModel.resetObtMode();
+                    } else if (mode.equals(OtgcMode.CLIENT)) {
+                        viewModel.resetClientMode();
+                    }
+                } else {
+                    if (mode.equals(OtgcMode.OBT)) {
+                        viewModel.setObtMode();
+                    } else if (mode.equals(OtgcMode.CLIENT)) {
+                        viewModel.setClientMode();
+                    }
                 }
+
             }
         });
     }

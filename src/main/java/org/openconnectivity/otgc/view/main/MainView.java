@@ -82,7 +82,6 @@ public class MainView implements FxmlView<MainViewModel>, Initializable {
         final Object lock = new Object();
         Platform.runLater(() -> {
             ButtonType yesButton = new ButtonType("Yes", ButtonBar.ButtonData.OK_DONE);
-            ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.CANCEL_CLOSE);
 
             Alert alertDialog = new Alert(Alert.AlertType.CONFIRMATION);
             alertDialog.setTitle("Insert random PIN");
@@ -91,7 +90,6 @@ public class MainView implements FxmlView<MainViewModel>, Initializable {
             alertDialog.getDialogPane().setGraphic(input);
             alertDialog.getButtonTypes().clear();
             alertDialog.getButtonTypes().add(yesButton);
-            alertDialog.getButtonTypes().add(noButton);
 
             Optional<ButtonType> result = alertDialog.showAndWait();
             if (result.get() == yesButton) {
@@ -99,15 +97,6 @@ public class MainView implements FxmlView<MainViewModel>, Initializable {
                 try {
                     synchronized (lock) {
                         verifyPin = input.getText().toString();
-                        lock.notifyAll();
-                    }
-                } catch (Exception ex) {
-                    LOG.error(ex.getLocalizedMessage());
-                }
-            } else if (result.get() == noButton) {
-                alertDialog.close();
-                try {
-                    synchronized (lock) {
                         lock.notifyAll();
                     }
                 } catch (Exception ex) {
