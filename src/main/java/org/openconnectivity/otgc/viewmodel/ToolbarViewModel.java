@@ -66,7 +66,9 @@ public class ToolbarViewModel implements ViewModel {
     private final GetDeviceNameUseCase getDeviceNameUseCase;
     private final SetDeviceNameUseCase setDeviceNameUseCase;
     private final SetClientModeUseCase setClientModeUseCase;
+    private final ResetClientModeUseCase resetClientModeUseCase;
     private final SetObtModeUseCase setObtModeUseCase;
+    private final ResetObtModeUseCase resetObtModeUseCase;
     private final GetModeUseCase getModeUseCase;
     private final GetDeviceIdUseCase getDeviceIdUseCase;
     private final OffboardDeviceUseCase offboardDeviceUseCase;
@@ -95,7 +97,9 @@ public class ToolbarViewModel implements ViewModel {
                     GetDeviceNameUseCase getDeviceNameUseCase,
                     SetDeviceNameUseCase setDeviceNameUseCase,
                     SetClientModeUseCase setClientModeUseCase,
+                    ResetClientModeUseCase resetClientModeUseCase,
                     SetObtModeUseCase setObtModeUseCase,
+                    ResetObtModeUseCase resetObtModeUseCase,
                     GetModeUseCase getModeUseCase,
                     GetDeviceIdUseCase getDeviceIdUseCase,
                     OffboardDeviceUseCase offboardDeviceUseCase,
@@ -108,7 +112,9 @@ public class ToolbarViewModel implements ViewModel {
         this.getDeviceNameUseCase = getDeviceNameUseCase;
         this.setDeviceNameUseCase = setDeviceNameUseCase;
         this.setClientModeUseCase = setClientModeUseCase;
+        this.resetClientModeUseCase = resetClientModeUseCase;
         this.setObtModeUseCase = setObtModeUseCase;
+        this.resetObtModeUseCase = resetObtModeUseCase;
         this.getModeUseCase = getModeUseCase;
         this.getDeviceIdUseCase = getDeviceIdUseCase;
         this.offboardDeviceUseCase = offboardDeviceUseCase;
@@ -271,8 +277,49 @@ public class ToolbarViewModel implements ViewModel {
                 ));
     }
 
+    public void resetClientMode() {
+        disposables.add(resetClientModeUseCase.execute()
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .doOnSubscribe(__ -> clientModeResponse.setValue(Response.loading()))
+                .subscribe(
+                        () -> {
+                            clientModeResponse.setValue(Response.success(null));
+                            getModeUseCase.execute()
+                                    .subscribeOn(schedulersFacade.io())
+                                    .observeOn(schedulersFacade.ui())
+                                    .subscribe(
+                                            mode -> modeProperty.setValue(Response.success(mode)),
+                                            throwable -> {}
+                                    );
+                        },
+                        throwable -> clientModeResponse.setValue(Response.error(throwable))
+                ));
+    }
+
     public void setObtMode() {
         disposables.add(setObtModeUseCase.execute()
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .doOnSubscribe(__ -> obtModeResponse.setValue(Response.loading()))
+                .subscribe(
+                        () -> {
+                            obtModeResponse.setValue(Response.success(null));
+                            getModeUseCase.execute()
+                                    .subscribeOn(schedulersFacade.io())
+                                    .observeOn(schedulersFacade.ui())
+                                    .subscribe(
+                                            mode -> modeProperty.setValue(Response.success(mode)),
+                                            throwable -> {}
+                                    );
+                        },
+                        throwable -> obtModeResponse.setValue(Response.error(throwable))
+                )
+        );
+    }
+
+    public void resetObtMode() {
+        disposables.add(resetObtModeUseCase.execute()
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> obtModeResponse.setValue(Response.loading()))

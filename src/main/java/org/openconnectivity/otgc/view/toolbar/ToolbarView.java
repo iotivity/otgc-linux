@@ -36,12 +36,10 @@ import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.utils.constant.OcfOxmType;
-import org.openconnectivity.otgc.utils.constant.OtgcConstant;
 import org.openconnectivity.otgc.utils.constant.OtgcMode;
 import org.openconnectivity.otgc.utils.util.DialogHelper;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
-import org.openconnectivity.otgc.view.setting.SettingsView;
 import org.openconnectivity.otgc.view.trustanchor.TrustAnchorView;
 import org.openconnectivity.otgc.viewmodel.ToolbarViewModel;
 
@@ -173,20 +171,20 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
 
     @FXML
     public void handleClientModeButton() {
-        showConfirmSetMode(OtgcMode.CLIENT);
+        showConfirmSetMode(OtgcMode.CLIENT, false);
     }
 
     @FXML
     public void handleObtModeButton() {
-        showConfirmSetMode(OtgcMode.OBT);
+        showConfirmSetMode(OtgcMode.OBT, false);
     }
 
     @FXML
     public void handleResetButton() {
         if (obtModeButton.isDisable()) {
-            showConfirmSetMode(OtgcMode.OBT);
+            showConfirmSetMode(OtgcMode.OBT, true);
         } else if (clientModeButton.isDisable()) {
-            showConfirmSetMode(OtgcMode.CLIENT);
+            showConfirmSetMode(OtgcMode.CLIENT, true);
         }
     }
 
@@ -313,25 +311,32 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         });
     }
 
-    private void showConfirmSetMode(String mode) {
+    private void showConfirmSetMode(String mode, boolean reset) {
         Platform.runLater(() -> {
             ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
 
             Alert alertDialog = new Alert(Alert.AlertType.CONFIRMATION);
             alertDialog.setHeaderText(resourceBundle.getString("dialog.title.confirm_reset_mode"));
-            alertDialog.setContentText("Are you sure you want to delete the currently\n" +
-                                       "ACEs and credentials to change the device mode\n" +
-                                       "to " + mode + " mode?");
+            alertDialog.setContentText(resourceBundle.getString("dialog.message.confirm_reset_mode"));
             alertDialog.getButtonTypes().clear();
             alertDialog.getButtonTypes().add(okButton);
 
             Optional<ButtonType> result = alertDialog.showAndWait();
             if (result.get() == okButton) {
-                if (mode.equals(OtgcMode.OBT)) {
-                    viewModel.setObtMode();
-                } else if (mode.equals(OtgcMode.CLIENT)) {
-                    viewModel.setClientMode();
+                if (reset) {
+                    if (mode.equals(OtgcMode.OBT)) {
+                        viewModel.resetObtMode();
+                    } else if (mode.equals(OtgcMode.CLIENT)) {
+                        viewModel.resetClientMode();
+                    }
+                } else {
+                    if (mode.equals(OtgcMode.OBT)) {
+                        viewModel.setObtMode();
+                    } else if (mode.equals(OtgcMode.CLIENT)) {
+                        viewModel.setClientMode();
+                    }
                 }
+
             }
         });
     }
