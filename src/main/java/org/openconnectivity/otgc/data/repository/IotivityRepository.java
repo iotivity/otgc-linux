@@ -100,13 +100,14 @@ public class IotivityRepository {
             File introspectionFile = new File(OtgcConstant.INTROSPECTION_CBOR_FILE);
             byte[] introspectionData = Files.readAllBytes(introspectionFile.toPath());
             OCIntrospection.setIntrospectionData(0 /* First device */, introspectionData);
+            OCBufferSettings.setMaxAppDataSize(16384); // 16 KB
 
             int ret = OCMain.mainInit(new OCMainInitHandler() {
                 @Override
                 public int initialize() {
                     LOG.debug("In OCMainInitHandler.initilize()");
                     int ret = OCMain.initPlatform("OCF");
-                    ret |= OCMain.addDevice("/oic/d", "oic.wk.d", "OTGC", "ocf.2.4.0", "ocf.res.1.3.0");
+                    ret |= OCMain.addDevice("/oic/d", "oic.wk.d", "OTGC", "ocf.2.0.5", "ocf.res.1.3.0");
                     return ret;
                 }
 

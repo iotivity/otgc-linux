@@ -206,7 +206,8 @@ public class ToolbarViewModel implements ViewModel {
                                                                                                     deviceRole -> {
                                                                                                         ownedDevice.setDeviceRole(deviceRole);
                                                                                                         deviceRoleResponse.setValue(Response.success(ownedDevice));
-                                                                                                        createAclUseCase.execute(ownedDevice, true, Arrays.asList("*"), 31)
+                                                                                                        String deviceId = getDeviceIdUseCase.execute().blockingGet();
+                                                                                                        createAclUseCase.execute(ownedDevice, deviceId, Arrays.asList("*"), 6)
                                                                                                                 .subscribeOn(schedulersFacade.io())
                                                                                                                 .observeOn(schedulersFacade.ui())
                                                                                                                 .subscribe(
