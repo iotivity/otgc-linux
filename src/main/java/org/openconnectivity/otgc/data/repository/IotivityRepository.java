@@ -101,6 +101,7 @@ public class IotivityRepository {
             byte[] introspectionData = Files.readAllBytes(introspectionFile.toPath());
             OCIntrospection.setIntrospectionData(0 /* First device */, introspectionData);
             OCBufferSettings.setMaxAppDataSize(16384); // 16 KB
+            OCMain.setConResAnnounced(false);   // Disable /oc/con resource
 
             int ret = OCMain.mainInit(new OCMainInitHandler() {
                 @Override

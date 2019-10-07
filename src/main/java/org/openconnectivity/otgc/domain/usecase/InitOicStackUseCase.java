@@ -20,10 +20,6 @@
 package org.openconnectivity.otgc.domain.usecase;
 
 import io.reactivex.Completable;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.sec.ECPrivateKey;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.iotivity.OCFactoryPresetsHandler;
 import org.iotivity.OCObt;
 import org.iotivity.OCPki;
@@ -32,24 +28,18 @@ import org.openconnectivity.otgc.data.repository.*;
 import org.openconnectivity.otgc.utils.constant.OtgcMode;
 
 import javax.inject.Inject;
-import java.security.*;
-import java.security.cert.X509Certificate;
-import java.security.spec.ECGenParameterSpec;
 
 public class InitOicStackUseCase {
 
     private final IotivityRepository iotivityRepository;
-    private final CertRepository certRepository;
     private final IORepository ioRepository;
     private final SettingRepository settingRepository;
 
     @Inject
     public InitOicStackUseCase(IotivityRepository iotivityRepository,
-                               CertRepository certRepository,
                                IORepository ioRepository,
                                SettingRepository settingRepository) {
         this.iotivityRepository = iotivityRepository;
-        this.certRepository = certRepository;
         this.ioRepository = ioRepository;
         this.settingRepository = settingRepository;
     }
@@ -79,38 +69,29 @@ public class InitOicStackUseCase {
         }
     });
     private void factoryResetHandler(long device) throws Exception {
-        String uuid = iotivityRepository.getDeviceId().blockingGet();
+        /* my cert */
+        byte[] eeCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
 
-        // Store root CA as trusted anchor
-        X509Certificate caCertificate = ioRepository.getAssetAsX509Certificate(OtgcConstant.ROOT_CERTIFICATE).blockingGet();
-        PrivateKey caPrivateKey = ioRepository.getAssetAsPrivateKey(OtgcConstant.ROOT_PRIVATE_KEY).blockingGet();
+        /* private key of my cert */
+        byte[] eeKey = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_KEY).blockingGet();
 
-        String strCACertificate = certRepository.x509CertificateToPemString(caCertificate).blockingGet();
-        if (OCPki.addTrustAnchor(device, strCACertificate.getBytes()) == -1) {
-            throw new Exception("Add trust anchor error");
+        /* intermediate cert */
+        byte[] subcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
+
+        /* root cert */
+        byte[] rootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
+
+        int credid = OCPki.addMfgCert(device, eeCertificate, eeKey);
+        if (credid == -1) {
+            throw new Exception("Add identity certificate error");
         }
-        if (OCPki.addMfgTrustAnchor(device, strCACertificate.getBytes()) == -1) {
-            throw new Exception("Add manufacturer trust anchor error");
+
+        if (OCPki.addMfgIntermediateCert(device, credid, subcaCertificate) == -1) {
+            throw new Exception("Add intermediate certificate error");
         }
 
-        // public/private key pair that we are creating certificate for
-        ECGenParameterSpec ecParamSpec = new ECGenParameterSpec("secp256r1");
-        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC", BouncyCastleProvider.PROVIDER_NAME);
-        keyPairGenerator.initialize(ecParamSpec);
-        KeyPair keyPair = keyPairGenerator.generateKeyPair();
-
-        // Public key
-        PublicKey publicKey = keyPair.getPublic();
-        // PrivateKey
-        ASN1Sequence pkSeq = (ASN1Sequence)ASN1Sequence.fromByteArray(keyPair.getPrivate().getEncoded());
-        PrivateKeyInfo pkInfo = PrivateKeyInfo.getInstance(pkSeq);
-        ECPrivateKey privateKey = ECPrivateKey.getInstance(pkInfo.parsePrivateKey());
-        String strPrivateKey = certRepository.privateKeyToPemString(privateKey).blockingGet();
-
-        X509Certificate identityCertificate = certRepository.generateIdentityCertificate(uuid, publicKey, caPrivateKey).blockingGet();
-        String strIdentityCertificate = certRepository.x509CertificateToPemString(identityCertificate).blockingGet();
-        if (OCPki.addMfgCert(device, strIdentityCertificate.getBytes(), strPrivateKey.getBytes()) == -1) {
-            throw  new Exception("Add identity certificate error");
+        if (OCPki.addMfgTrustAnchor(device, rootcaCertificate) == -1) {
+            throw new Exception("Add root certificate error");
         }
 
         OCObt.shutdown();
