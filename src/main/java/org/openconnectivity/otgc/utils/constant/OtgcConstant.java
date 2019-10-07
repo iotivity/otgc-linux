@@ -30,19 +30,17 @@ public class OtgcConstant {
     }
 
     // Data resource path
-    private static final String DATA_PATH = "." + File.separator + "data" + File.separator;
+    public static final String DATA_PATH = "." + File.separator + "data" + File.separator;
 
     // Credential directory
     public static final String OTGC_CREDS_DIR = DATA_PATH + "otgc_creds";
 
      // File databases for IoTivity
-    public static final String OIC_CLIENT_JSON_DB_FILE = DATA_PATH + "oic_svr_db_client.json";
-    public static final String OIC_CLIENT_CBOR_DB_FILE = DATA_PATH + "oic_svr_db_client.dat";
     public static final String INTROSPECTION_CBOR_FILE = DATA_PATH + "introspection.dat";
-    public static final String OIC_SQL_DB_FILE = "Pdm.db";
 
-    // Root certificate and keypair
-    public static String ROOT_CERTIFICATE = "root.crt";
-    public static String ROOT_PRIVATE_KEY = "root.prv";
-    public static String ROOT_PUBLIC_KEY = "root.pub";
+    /* Kyrio certificate chain */
+    public static String KYRIO_ROOT_CERTIFICATE = "kyrio-root-cert.pem";
+    public static String KYRIO_SUBCA_CERTIFICATE = "kyrio-subca-cert.pem";
+    public static String KYRIO_EE_CERTIFICATE = "kyrio-ee-cert.pem";
+    public static String KYRIO_EE_KEY = "kyrio-ee-key.pem";
 }
