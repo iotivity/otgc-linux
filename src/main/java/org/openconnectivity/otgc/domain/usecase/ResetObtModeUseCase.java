@@ -53,6 +53,7 @@ public class ResetObtModeUseCase {
                 .flatMapCompletable(device -> doxsRepository.resetDevice(device.getDeviceId()))
                 .delay(delay, TimeUnit.SECONDS)
                 .andThen(provisioningRepository.resetSvrDb())
+                .andThen(provisioningRepository.doSelfOwnership())
                 .andThen(settingRepository.set(SettingRepository.MODE_KEY, OtgcMode.OBT));
     }
 }
