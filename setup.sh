@@ -2,6 +2,13 @@
 # build setup script to be used with an curl command
 #
 
+#
+# system update
+#
+sudo apt-get -y update
+sudo apt-get -y upgrade
+sudo apt-get -y update
+
 # make sure that git is there, because the scripts are using git.
 # nano is just good to have,
 sudo apt-get -y install git nano automake 
