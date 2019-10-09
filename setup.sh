@@ -2,9 +2,13 @@
 # build setup script to be used with an curl command
 #
 
+# make sure that git is there, because the scripts are using git.
+# nano is just good to have,
+sudo apt-get -y install git nano automake 
 
-sudo apt install maven
-sudo apt-get install swig
+# maven and swig are needed for building
+sudo apt-get -y install maven
+sudo apt-get -y install swig
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
