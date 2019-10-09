@@ -20,6 +20,7 @@ sudo apt-get -y install swig
 sudo apt-get -y install openjdk-8-jdk
 sudo apt-get -y install openjfx
 sudo apt-get -y install libopenjfx-jni
+sudo apt-get -y install libopenjfx-java
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
