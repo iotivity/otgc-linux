@@ -9,6 +9,9 @@ sudo apt-get -y install git nano automake
 # maven and swig are needed for building
 sudo apt-get -y install maven
 sudo apt-get -y install swig
+# install dependend jdk/jfx packages
+sudo apt-get -y install openjdk-8-jdk
+sudo apt-get -y install openjfx
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
@@ -61,9 +64,6 @@ cd ..
 cd ..
 # back at the root level
 
-# install dependend packages
-sudo apt-get -y install openjdk-8-jdk
-sudo apt-get -y install openjfx
 
 # install otgc
 sudo dpkg -r otgc
