@@ -62,8 +62,8 @@ cd ..
 # back at the root level
 
 # install dependend packages
-sudo apt-get install openjdk-8-jdk
-sudo apt-get install openjfx
+sudo apt-get -y install openjdk-8-jdk
+sudo apt-get -y install openjfx
 
 # install otgc
 sudo dpkg -r otgc
