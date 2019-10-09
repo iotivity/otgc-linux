@@ -45,20 +45,21 @@ cp ./iotivity-lite/swig/iotivity-lite-java/libs/*.so ./otgc-linux/lib/jni/.
 cp ./iotivity-lite/swig/iotivity-lite-java/libs/*.jar ./otgc-linux/lib/.
 
 
-cd otgc-linux
 # build otgc
+cd otgc-linux
+# in the otgc-linux folder
 mvn jfx:jar
 
 cd ./build/debian
 ./otgc_native.sh ../../target/jfx/app
 cd ..
 cd ..
-
+cd ..
+# back at the root level
 
 # install dependend packages
 sudo apt-get install openjdk-8-jdk
 sudo apt-get install openjfx
-
 
 # install otgc
 sudo dpkg -r otgc
