@@ -1,5 +1,5 @@
-#
-# setup scrip to be used with an curl command
+#!/bin/bash
+# build setup script to be used with an curl command
 #
 
 
