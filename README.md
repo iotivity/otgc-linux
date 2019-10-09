@@ -127,6 +127,12 @@ To uninstall the aplication, use the next command:
 
     sudo dpkg -r otgc
   
+## script to build and install
+the following command executes all steps indicated above for building and installing on Linux
+
+
+   curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
+  
 ## License
 
 This library is released under Apache 2.0 license (http://www.apache.org/licenses/LICENSE-2.0.txt).
