@@ -18,9 +18,21 @@ sudo apt-get -y install maven
 sudo apt-get -y install swig
 # install dependend jdk/jfx packages
 sudo apt-get -y install openjdk-8-jdk
-sudo apt-get -y install openjfx
-sudo apt-get -y install libopenjfx-jni
-sudo apt-get -y install libopenjfx-java
+
+
+ubuntu_version=`cat /etc/issue`
+if [[ $ubuntu_version =~ "Ubuntu 18" ]]; then
+   sudo apt-get -y install openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
+elif [[ $ubuntu_version =~ "Ubuntu 16" ]]; then
+   sudo apt-get -y install openjfx
+   sudo apt-get -y install libopenjfx-jni
+   sudo apt-get -y install libopenjfx-java
+else
+   sudo apt-get -y install openjfx
+   sudo apt-get -y install libopenjfx-jni
+   sudo apt-get -y install libopenjfx-java
+fi
+
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
