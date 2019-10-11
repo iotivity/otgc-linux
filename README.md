@@ -132,6 +132,10 @@ the following command executes all steps indicated above for building and instal
 
 
    curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
+   
+ 
+Note for building on a rasberry pi the Archicture needs to be armhf
+This change can be made in the file /build/debian/control
   
 ## License
 
