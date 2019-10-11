@@ -1,4 +1,5 @@
 #!/bin/bash
+set -x #echo on
 # build setup script to be used with an curl command
 #
 
