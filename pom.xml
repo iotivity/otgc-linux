@@ -73,7 +73,7 @@
                         </goals>
                         <configuration>
                             <!-- <outputDirectory>${project.build.directory}/classes/lib</outputDirectory> -->
-                            <outputDirectory>${build.directory}/jfx/app/lib</outputDirectory>
+                            <outputDirectory>${project.build.directory}/jfx/app/lib</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
                             <overWriteIfNewer>true</overWriteIfNewer>
@@ -98,8 +98,6 @@
             <groupId>org.iotivity</groupId>
             <artifactId>iotivity-lite</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/iotivity-lite.jar</systemPath>
         </dependency>
         <!-- -->
         <dependency>
@@ -168,23 +166,17 @@
             <artifactId>hsqldb</artifactId>
             <version>2.4.0</version>
         </dependency>
+        <!-- JUnit -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <!-- JUnit -->
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-junit</artifactId>
             <version>2.0.0.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
             <scope>test</scope>
         </dependency>
         <!-- Mockito -->
@@ -237,12 +229,6 @@
             <groupId>com.upokecenter</groupId>
             <artifactId>cbor</artifactId>
             <version>3.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

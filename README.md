@@ -35,7 +35,18 @@ To import the IoTivity-lite API Binary into the OTGC Linux App project:
 
 4. Copy **libiotivity-lite.so** into &lt;otgc-linux>/lib/jni
 
-5. Add the following command, to link the previous libraries with iotivity.jar, in the run/debug configuration:
+5. Install iotivity-lite.jar into the local Maven repository
+```
+mvn install:install-file \
+    -Dfile=lib/iotivity-lite.jar \
+    -DgroupId=org.iotivity \
+    -DartifactId=iotivity-lite \
+    -Dversion=1.0 \
+    -Dpackaging=jar \
+    -DgeneratePom=true
+```
+
+6. Add the following command, to link the previous libraries with iotivity.jar, in the run/debug configuration:
 ```
 -Djava.library.path=<otgc-linux>/lib/jni
 ```

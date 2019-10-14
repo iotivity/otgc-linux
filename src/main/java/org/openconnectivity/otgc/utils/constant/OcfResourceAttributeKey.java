@@ -19,12 +19,11 @@
 
 package org.openconnectivity.otgc.utils.constant;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class OcfResourceAttributeKey {
 
-    private OcfResourceAttributeKey() {
-        throw new NotImplementedException();
+    private OcfResourceAttributeKey() throws Exception {
+        throw new Exception("Static class");
     }
 
     /* Resource base */
