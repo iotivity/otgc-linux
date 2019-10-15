@@ -19,14 +19,12 @@
 
 package org.openconnectivity.otgc.utils.constant;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.io.File;
 
 public class OtgcConstant {
 
-    private OtgcConstant() {
-        throw new NotImplementedException();
+    private OtgcConstant() throws Exception {
+        throw new Exception("Static class");
     }
 
     // Data resource path

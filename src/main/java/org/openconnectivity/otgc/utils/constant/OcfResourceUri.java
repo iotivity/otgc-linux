@@ -19,12 +19,11 @@
 
 package org.openconnectivity.otgc.utils.constant;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class OcfResourceUri {
 
-    private OcfResourceUri() {
-        throw new NotImplementedException();
+    private OcfResourceUri() throws Exception {
+        throw new Exception("Static class");
     }
 
     // URIs

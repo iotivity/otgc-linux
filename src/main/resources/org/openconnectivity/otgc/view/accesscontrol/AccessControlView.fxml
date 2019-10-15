@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXCheckBox?>
 <?import com.jfoenix.controls.JFXRadioButton?>
 <?import com.jfoenix.controls.JFXTextField?>
-<?import com.jfoenix.controls.JFXCheckBox?>
-<?import com.jfoenix.controls.JFXButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
 <!--
   ~ Copyright 2018 DEKRA Testing and Certification, S.A.U. All Rights Reserved.
   ~
@@ -29,84 +34,75 @@
   ~
   -->
 
-<AnchorPane maxHeight="1000" maxWidth="Infinity" minHeight="300" minWidth="400"
-            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="org.openconnectivity.otgc.view.accesscontrol.AccessControlView">
+<AnchorPane maxHeight="1000" maxWidth="Infinity" minHeight="300" minWidth="400" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.openconnectivity.otgc.view.accesscontrol.AccessControlView">
     <children>
-        <GridPane fx:id="amsGrid" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0">
+        <GridPane fx:id="amsGrid" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <columnConstraints>
-                <ColumnConstraints percentWidth="50.0" halignment="CENTER" hgrow="ALWAYS" />
-                <ColumnConstraints percentWidth="50.0" halignment="CENTER" hgrow="ALWAYS" />
+                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" percentWidth="50.0" />
+                <ColumnConstraints halignment="CENTER" hgrow="ALWAYS" percentWidth="50.0" />
             </columnConstraints>
             <rowConstraints>
                 <RowConstraints valignment="CENTER" vgrow="ALWAYS" />
             </rowConstraints>
             <children>
-                <AnchorPane GridPane.columnIndex="0" prefWidth="100">
+                <AnchorPane GridPane.columnIndex="0">
                     <children>
-                        <ListView fx:id="amsListView" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                                  AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+                        <ListView fx:id="amsListView" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                     </children>
                 </AnchorPane>
-                <AnchorPane GridPane.columnIndex="1" prefWidth="100">
+                <AnchorPane GridPane.columnIndex="1">
                     <children>
-                        <ScrollPane AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0"
-                                    AnchorPane.rightAnchor="0.0" AnchorPane.leftAnchor="0.0">
+                        <ScrollPane fitToHeight="true" fitToWidth="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <content>
-                                <VBox spacing="20" >
+                                <VBox spacing="20">
                                     <children>
-                                        <VBox alignment="CENTER_LEFT" spacing="7">
+                                        <VBox alignment="CENTER_LEFT" spacing="7" VBox.vgrow="ALWAYS">
                                             <children>
                                                 <Label text="%accesscontrol.label.subject_type" />
-                                                <JFXRadioButton fx:id="uuidRadioButton" selected="true" text="%accesscontrol.radiobutton.uuid"
-                                                                onAction="#handleSubjectGroup">
+                                                <JFXRadioButton fx:id="uuidRadioButton" onAction="#handleSubjectGroup" selected="true" text="%accesscontrol.radiobutton.uuid">
                                                     <toggleGroup>
-                                                        <ToggleGroup fx:id="toggleSubjectGroup"/>
+                                                        <ToggleGroup fx:id="toggleSubjectGroup" />
                                                     </toggleGroup>
                                                 </JFXRadioButton>
-                                                <JFXRadioButton fx:id="roleRadioButton" selected="false" onAction="#handleSubjectGroup"
-                                                                text="%accesscontrol.radiobutton.role" toggleGroup="$toggleSubjectGroup" />
-                                                <JFXRadioButton fx:id="conntypeRadioButton" selected="false" onAction="#handleSubjectGroup"
-                                                                text="%accesscontrol.radiobutton.conntype" toggleGroup="$toggleSubjectGroup" />
+                                                <JFXRadioButton fx:id="roleRadioButton" onAction="#handleSubjectGroup" selected="false" text="%accesscontrol.radiobutton.role" toggleGroup="$toggleSubjectGroup" />
+                                                <JFXRadioButton fx:id="conntypeRadioButton" onAction="#handleSubjectGroup" selected="false" text="%accesscontrol.radiobutton.conntype" toggleGroup="$toggleSubjectGroup" />
                                             </children>
                                         </VBox>
-                                        <VBox alignment="CENTER_LEFT" spacing="7">
+                                        <VBox alignment="CENTER_LEFT" spacing="7" VBox.vgrow="ALWAYS">
                                             <children>
                                                 <JFXTextField fx:id="uuidTextField" labelFloat="true" promptText="%accesscontrol.label.uuid" />
-                                                <HBox fx:id="roleBox" spacing="5" disable="true">
+                                                <HBox fx:id="roleBox" disable="true" spacing="5">
                                                     <children>
                                                         <JFXTextField fx:id="roleidTextField" labelFloat="true" promptText="%accesscontrol.label.role_id" />
                                                         <JFXTextField fx:id="authorityTextField" labelFloat="true" promptText="%accesscontrol.label.role_authority" />
                                                     </children>
                                                 </HBox>
-                                                <VBox fx:id="conntypeBox" spacing="7" disable="true">
+                                                <VBox fx:id="conntypeBox" disable="true" spacing="7">
                                                     <children>
                                                         <Label text="%accesscontrol.label.conntype" />
                                                         <JFXRadioButton fx:id="anonRadioButton" selected="true" text="%accesscontrol.radiobutton.anon">
                                                             <toggleGroup>
-                                                                <ToggleGroup fx:id="toggleConnGroup"/>
+                                                                <ToggleGroup fx:id="toggleConnGroup" />
                                                             </toggleGroup>
                                                         </JFXRadioButton>
-                                                        <JFXRadioButton fx:id="authRadioButton" selected="false"
-                                                                        text="%accesscontrol.radiobutton.auth" toggleGroup="$toggleConnGroup" />
+                                                        <JFXRadioButton fx:id="authRadioButton" selected="false" text="%accesscontrol.radiobutton.auth" toggleGroup="$toggleConnGroup" />
                                                     </children>
                                                 </VBox>
                                             </children>
                                         </VBox>
-                                        <HBox>
-                                            <JFXCheckBox fx:id="wildcardCheck" text="%accesscontrol.checkbox.wildcard"
-                                                onMouseClicked="#handleWildcardCheck"/>
+                                        <HBox VBox.vgrow="ALWAYS">
+                                            <JFXCheckBox fx:id="wildcardCheck" onMouseClicked="#handleWildcardCheck" text="%accesscontrol.checkbox.wildcard" />
                                         </HBox>
-                                        <VBox fx:id="wildcardBox" disable="true" spacing="10">
+                                        <VBox fx:id="wildcardBox" disable="true" spacing="10" VBox.vgrow="ALWAYS">
                                             <children>
                                                 <JFXCheckBox fx:id="wcAll" text="%accesscontrol.checkbox.wc_all" />
                                                 <JFXCheckBox fx:id="wcAllSecure" text="%accesscontrol.checkbox.wc_all_secure" />
                                                 <JFXCheckBox fx:id="wcAllPublic" text="%accesscontrol.checkbox.wc_all_public" />
                                             </children>
                                         </VBox>
-                                        <HBox>
+                                        <HBox VBox.vgrow="ALWAYS">
                                             <children>
-                                                <ListView fx:id="verticalResourcesList" prefHeight="100" />
+                                                <ListView fx:id="verticalResourcesList" minHeight="200.0" HBox.hgrow="ALWAYS" />
                                             </children>
                                         </HBox>
                                         <HBox alignment="CENTER_LEFT" spacing="7">
@@ -120,8 +116,8 @@
                                         </HBox>
                                         <HBox alignment="CENTER_RIGHT" spacing="7">
                                             <children>
-                                                <JFXButton fx:id="saveButton" text="%accesscontrol.button.save" onAction="#handleSaveACL" />
-                                                <JFXButton fx:id="deleteButton" text="%accesscontrol.button.delete" onAction="#handleDeleteACL" />
+                                                <JFXButton fx:id="saveButton" onAction="#handleSaveACL" text="%accesscontrol.button.save" />
+                                                <JFXButton fx:id="deleteButton" onAction="#handleDeleteACL" text="%accesscontrol.button.delete" />
                                             </children>
                                         </HBox>
                                     </children>

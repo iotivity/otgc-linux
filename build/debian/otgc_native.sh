@@ -11,21 +11,23 @@
 
 # Constants
 PROJECT_NAME="otgc"
-VERSION="2.1.0"
+VERSION="2.2.0"
 
 program=$0
 
 function usage()
 {
-    echo "usage: $program app_path"
+    echo "usage: $program app_path arch"
     echo "  path      Path to assets, libraries and application jar"
+    echo "  arch      Target architecture (see values with the command dpkg-architecture -L)"
     exit 1
 }
 
-if [ $# -ne 1 ] ; then
+if [ $# -ne 2 ] ; then
     usage
 else
     path=$1
+    arch=$2
     
     mkdir $(pwd)/out
 
@@ -40,12 +42,17 @@ else
     mkdir -p $(pwd)/out/$PROJECT_NAME-$VERSION/usr/share/applications           # item desktop
 
     # Copy configuration and script files to DEBIAN folder
-    if [ -e "$(pwd)/control" ]
+    if [ -e "$(pwd)/template_control.sh" ]
     then
-        cp $(pwd)/control $(pwd)/out/$PROJECT_NAME-$VERSION/DEBIAN
-    else
-        echo "Control file does not exist."
-        exit 1
+        chmod 755 $(pwd)/template_control.sh
+        if [ -e "$(pwd)/out/control" ]
+        then
+            rm $(pwd)/out/control
+        fi
+        $(pwd)/template_control.sh "$VERSION" $arch > $(pwd)/out/control
+        chmod 755 $(pwd)/out/control
+        cp $(pwd)/out/control $(pwd)/out/$PROJECT_NAME-$VERSION/DEBIAN
+        rm $(pwd)/out/control
     fi
     # Pre-Installation script
     if [ -e "$(pwd)/template_preinst.sh" ]
