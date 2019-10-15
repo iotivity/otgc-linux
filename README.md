@@ -128,10 +128,15 @@ To uninstall the aplication, use the next command:
     sudo dpkg -r otgc
   
 ## script to build and install
-the following command executes all steps indicated above for building and installing on Linux
+the following command executes all steps indicated above for building and installing on Linux (ubuntu 16)
 
 
    curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
+   
+ 
+For ubuntu 18 and other systems that needs downgraded java components use:
+
+ curl https://openconnectivity.github.io/otgc-linux/setup-java.sh | bash
    
  
 Note for building on a raspberry pi the Archicture needs to be armhf and has to run a windowing system
