@@ -2,6 +2,7 @@
 set -x #echo on
 # build setup script to be used with an curl command
 #
+OTGC_VERSION=2.2.0
 
 #
 # system update
@@ -17,23 +18,19 @@ sudo apt-get -y install git nano automake
 # maven and swig are needed for building
 sudo apt-get -y install maven
 sudo apt-get -y install swig
+
+#
 # install dependend jdk/jfx packages
+#
 sudo apt-get -y install openjdk-8-jdk
-
-
-ubuntu_version=`cat /etc/issue`
-if [[ $ubuntu_version =~ "Ubuntu 18" ]]; then
-   sudo apt-get -y install openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
-elif [[ $ubuntu_version =~ "Ubuntu 16" ]]; then
-   sudo apt-get -y install openjfx
-   sudo apt-get -y install libopenjfx-jni
-   sudo apt-get -y install libopenjfx-java
-else
-   sudo apt-get -y install openjfx
-   sudo apt-get -y install libopenjfx-jni
-   sudo apt-get -y install libopenjfx-java
-fi
-
+# install java components, but later overwrite them with the downgraded versions if they exist on the system
+sudo apt-get -y install openjfx
+sudo apt-get -y install libopenjfx-jni
+sudo apt-get -y install libopenjfx-java
+# install downgraded java components
+sudo apt-get -y install openjfx=8u161-b12-1ubuntu2 
+sudo apt-get -y install libopenjfx-java=8u161-b12-1ubuntu2 
+sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
@@ -57,8 +54,9 @@ git checkout otgc_220
 git apply --stat ../otgc-linux/extlibs/patchs/remove_cred_by_credid.patch
 git apply ../otgc-linux/extlibs/patchs/remove_cred_by_credid.patch
 
-git apply --stat ../otgc-linux/extlibs/patchs/fix_oc_api.patch
-git apply ../otgc-linux/extlibs/patchs/fix_oc_api.patch
+# not needed anymore
+#git apply --stat ../otgc-linux/extlibs/patchs/fix_oc_api.patch
+#git apply ../otgc-linux/extlibs/patchs/fix_oc_api.patch
 
 cd ./port/linux
 make DEBUG=1 SECURE=1 IPV4=1 TCP=0 PKI=1 DYNAMIC=1 CLOUD=0 JAVA=1 IDD=1 
@@ -73,24 +71,38 @@ pwd
 cp ./iotivity-lite/swig/iotivity-lite-java/libs/*.so ./otgc-linux/lib/jni/.
 cp ./iotivity-lite/swig/iotivity-lite-java/libs/*.jar ./otgc-linux/lib/.
 
-
-# build otgc
+#
+# build otgc (in the otgc-linux folder)
+#
 cd otgc-linux
-# in the otgc-linux folder
+
+# install the create lib, so that maven can find it during the build
+mvn install:install-file \
+    -Dfile=lib/iotivity-lite.jar \
+    -DgroupId=org.iotivity \
+    -DartifactId=iotivity-lite \
+    -Dversion=1.0 \
+    -Dpackaging=jar \
+    -DgeneratePom=true
+
+# do the actual build
 mvn jfx:jar
 
+# build the debian package
 cd ./build/debian
-./otgc_native.sh ../../target/jfx/app
+./otgc_native.sh ../../target/jfx/app amd64
 cd ..
 cd ..
 cd ..
 # back at the root level
 
-
-# install otgc
+#
+# install the created debian package e.g. the otgc application
+#
+# remove the currently installed package
 sudo dpkg -r otgc
-sudo dpkg -i ./otgc-linux/build/debian/out/otgc-2.1.0.deb
-
+# install the newly created package
+sudo dpkg -i ./otgc-linux/build/debian/out/otgc-${OTGC_VERSION}.deb
 
 
 
