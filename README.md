@@ -144,9 +144,9 @@ the following command executes all steps indicated above for building and instal
    curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
    
  
-For ubuntu 18 and other systems that needs downgraded java components use:
+For rasbian (stretch) use:
 
- curl https://openconnectivity.github.io/otgc-linux/setup-java.sh | bash
+ curl https://openconnectivity.github.io/otgc-linux/setup-pi.sh | bash
    
  
 Note for building on a raspberry pi the Archicture needs to be armhf and has to run a windowing system
