@@ -84,7 +84,7 @@ mvn jfx:jar
 
 # build the debian package
 cd ./build/debian
-./otgc_native.sh ../../target/jfx/app
+./otgc_native.sh ../../target/jfx/app $1
 cd ..
 cd ..
 cd ..
