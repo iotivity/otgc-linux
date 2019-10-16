@@ -45,8 +45,8 @@ git checkout otgc_220
 git apply --stat ../otgc-linux/extlibs/patchs/remove_cred_by_credid.patch
 git apply ../otgc-linux/extlibs/patchs/remove_cred_by_credid.patch
 
-git apply --stat ../otgc-linux/extlibs/patchs/fix_oc_api.patch
-git apply ../otgc-linux/extlibs/patchs/fix_oc_api.patch
+#git apply --stat ../otgc-linux/extlibs/patchs/fix_oc_api.patch
+#git apply ../otgc-linux/extlibs/patchs/fix_oc_api.patch
 
 cd ./port/linux
 make DEBUG=1 SECURE=1 IPV4=1 TCP=0 PKI=1 DYNAMIC=1 CLOUD=0 JAVA=1 IDD=1 
