@@ -51,7 +51,7 @@ rm -rf iotivity-lite
 git clone https://github.com/iotivity/iotivity-lite.git
 cd iotivity-lite
 git checkout swig
-git checkout d301b81dc3ce39f477318be219ede1d9ab835940
+git checkout otgc_220
 
 
 git apply --stat ../otgc-linux/extlibs/patchs/remove_cred_by_credid.patch
