@@ -2,7 +2,7 @@
 set -x #echo on
 # build setup script to be used with an curl command
 #
-OTGC_VERSION=2.0.2
+OTGC_VERSION=2.2.0
 
 #
 # system update
