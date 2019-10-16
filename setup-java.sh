@@ -2,7 +2,7 @@
 set -x #echo on
 # build setup script to be used with an curl command
 #
-VERSION=2.0.2
+OTGC_VERSION=2.0.2
 
 #
 # system update
@@ -96,4 +96,4 @@ cd ..
 # remove the currently installed package
 sudo dpkg -r otgc
 # install the newly created package
-sudo dpkg -i ./otgc-linux/build/debian/out/otgc-$VERSION.deb
+sudo dpkg -i ./otgc-linux/build/debian/out/otgc-${OTGC_VERSION}.deb
