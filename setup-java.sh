@@ -96,4 +96,4 @@ cd ..
 # remove the currently installed package
 sudo dpkg -r otgc
 # install the newly created package
-sudo dpkg -i ./otgc-linux/build/debian/out/otgc-$(VERSION).deb
+sudo dpkg -i ./otgc-linux/build/debian/out/otgc-$VERSION.deb
