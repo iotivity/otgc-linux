@@ -13,7 +13,11 @@ sudo apt-get -y update
 
 # make sure that git is there, because the scripts are using git.
 # nano is just good to have,
-sudo apt-get -y install git nano automake make
+sudo apt-get -y install git 
+sudo apt-get -y nano 
+sudo apt-get -y automake
+sudo apt-get -y install make 
+sudo apt-get -y install make-guile
 
 # maven and swig are needed for building
 sudo apt-get -y install maven
