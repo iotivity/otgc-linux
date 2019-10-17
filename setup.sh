@@ -81,6 +81,8 @@ cp ./iotivity-lite/swig/iotivity-lite-java/libs/*.jar ./otgc-linux/lib/.
 #
 cd otgc-linux
 
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+
 # install the create lib, so that maven can find it during the build
 mvn install:install-file \
     -Dfile=lib/iotivity-lite.jar \
