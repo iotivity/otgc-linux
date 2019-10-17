@@ -33,9 +33,9 @@ sudo apt-get -y install openjfx
 sudo apt-get -y install libopenjfx-jni
 sudo apt-get -y install libopenjfx-java
 # install downgraded java components
-sudo apt-get -y install openjfx=8u161-b12-1ubuntu2 
-sudo apt-get -y install libopenjfx-java=8u161-b12-1ubuntu2 
-sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2
+sudo apt-get -y  install openjfx=8u161-b12-1ubuntu2 --allow-downgrades
+sudo apt-get -y install libopenjfx-java=8u161-b12-1ubuntu2 --allow-downgrades
+sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2 --allow-downgrades
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
