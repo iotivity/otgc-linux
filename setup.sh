@@ -18,6 +18,7 @@ sudo apt-get -y nano
 sudo apt-get -y automake
 sudo apt-get -y install make 
 sudo apt-get -y install make-guile
+sudo apt-get -y install gcc
 
 # maven and swig are needed for building
 sudo apt-get -y install maven
