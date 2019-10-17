@@ -46,7 +46,7 @@ mvn install:install-file \
     -DgeneratePom=true
 ```
 
-6. Add the following command, to link the previous libraries with iotivity.jar, in the run/debug configuration:
+To run or to debug the OTGC application in an IDE, the following command as to be added as VM argument to link iotivity-lite library to the project:
 ```
 -Djava.library.path=<otgc-linux>/lib/jni
 ```
