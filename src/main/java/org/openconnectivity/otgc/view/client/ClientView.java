@@ -169,9 +169,14 @@ public class ClientView  implements FxmlView<ClientViewModel>, Initializable {
                 notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, true);
                 break;
             case SUCCESS:
-                notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
-                viewModel.buildUiForIntrospect(newValue.data);
-                box.getChildren().clear();
+                if (!newValue.data.isEmpty()) {
+                    notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
+                    viewModel.buildUiForIntrospect(newValue.data);
+                    box.getChildren().clear();
+                } else {
+                    notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
+                    viewModel.findResources();
+                }
                 break;
             default:
                 notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
