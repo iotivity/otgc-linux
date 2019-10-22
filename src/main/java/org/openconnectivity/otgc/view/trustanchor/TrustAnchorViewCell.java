@@ -28,6 +28,7 @@ public class TrustAnchorViewCell extends ListCell<OcCredential> {
     private GridPane gridPane = new GridPane();
     private Label credId = new Label();
     private Label credSubject = new Label();
+    private Label credUsage = new Label();
 
     public TrustAnchorViewCell() {
         configureGrid();
@@ -42,6 +43,7 @@ public class TrustAnchorViewCell extends ListCell<OcCredential> {
     private void addControlsToGrid() {
         gridPane.add(credId, 0, 0);
         gridPane.add(credSubject, 0, 1);
+        gridPane.add(credUsage, 0, 2);
     }
 
     @Override
@@ -65,6 +67,7 @@ public class TrustAnchorViewCell extends ListCell<OcCredential> {
 
         credId.setText("Credential ID: " + String.valueOf(cred.getCredid()));
         credSubject.setText("UUID: " + cred.getSubjectuuid());
+        credSubject.setText("Usage: " + cred.getCredusage().getValue());
 
         setGraphic(gridPane);
     }
