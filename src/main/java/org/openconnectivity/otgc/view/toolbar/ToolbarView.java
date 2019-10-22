@@ -114,7 +114,7 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         Platform.runLater(() -> {
             ChoiceDialog alertDialog = new ChoiceDialog(options.get(0), options);
             alertDialog.setTitle(resourceBundle.getString("dialog.title.select_oxm"));
-            alertDialog.setHeaderText("OXM: ");
+            alertDialog.setHeaderText("OTM: ");
 
             Optional<String> result = alertDialog.showAndWait();
             if (result.isPresent()) {
