@@ -53,6 +53,7 @@ public class TrustAnchorViewModel implements ViewModel {
     public ListProperty<OcCredential> trustAnchorListProperty() {
         return trustAnchorList;
     }
+    private final ObjectProperty<Response<Void>> storeTrustAnchorResponse = new SimpleObjectProperty<>();
 
     @Inject
     public TrustAnchorViewModel(SchedulersFacade schedulersFacade,
@@ -63,6 +64,10 @@ public class TrustAnchorViewModel implements ViewModel {
         this.storeTrustAnchorUseCase = storeTrustAnchorUseCase;
         this.getTrustAnchorUseCase = getTrustAnchorUseCase;
         this.remoteRemoveTrustAnchorByCredidUseCase = remoteRemoveTrustAnchorByCredidUseCase;
+    }
+
+    public ObjectProperty<Response<Void>> storeTrustAnchorResponseProperty() {
+        return storeTrustAnchorResponse;
     }
 
     public void retrieveTrustAnchors() {
@@ -82,7 +87,7 @@ public class TrustAnchorViewModel implements ViewModel {
             .observeOn(schedulersFacade.ui())
             .subscribe(
                     () -> retrieveTrustAnchors(),
-                    throwable -> {}
+                    throwable -> storeTrustAnchorResponse.set(Response.error(throwable))
             ));
     }
 

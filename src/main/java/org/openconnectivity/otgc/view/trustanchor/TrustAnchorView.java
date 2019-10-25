@@ -22,6 +22,7 @@ import com.jfoenix.controls.JFXButton;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
@@ -31,6 +32,8 @@ import javafx.stage.Stage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
+import org.openconnectivity.otgc.utils.util.Toast;
+import org.openconnectivity.otgc.utils.viewmodel.Response;
 import org.openconnectivity.otgc.viewmodel.TrustAnchorViewModel;
 
 import javax.inject.Inject;
@@ -50,16 +53,22 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
     @Inject
     private Stage primaryStage;
 
+    private ResourceBundle resourceBundle;
+
     @FXML private ListView<OcCredential> listView;
     @FXML private JFXButton infoCaButton;
     @FXML private JFXButton removeCaButton;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        this.resourceBundle = resourceBundle;
+
         viewModel.retrieveTrustAnchors();
 
         listView.itemsProperty().bind(viewModel.trustAnchorListProperty());
         listView.setCellFactory(deviceListView -> new TrustAnchorViewCell());
+
+        viewModel.storeTrustAnchorResponseProperty().addListener(this::processStoreTrustAnchorResponse);
 
         infoCaButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
                                                 listView.getSelectionModel().getSelectedItem() == null,
@@ -136,6 +145,16 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
         File file = fileChooser.showOpenDialog(primaryStage);
         if (file != null) {
             viewModel.addTrustAnchor(file);
+        }
+    }
+
+    private void processStoreTrustAnchorResponse(ObservableValue<? extends Response<Void>> obs, Response<Void> oldValue, Response<Void> newValue) {
+        switch (newValue.status) {
+            case ERROR:
+                Toast.show(primaryStage, resourceBundle.getString("trustanchor.create_cred.error"));
+                break;
+            default:
+                break;
         }
     }
 
