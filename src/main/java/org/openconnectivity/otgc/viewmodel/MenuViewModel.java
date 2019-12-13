@@ -58,7 +58,12 @@ public class MenuViewModel implements ViewModel {
                 (key, payload) -> deviceUuid.setValue(getDeviceIdUseCase.execute().blockingGet()));
     }
 
+    public void discover() {
+        notificationCenter.publish(NotificationKey.SCAN_DEVICES);
+    }
+
     public void closeAction() {
         closeIotivityUseCase.execute();
+        System.exit(1);
     }
 }
