@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 public class CredentialViewModel implements ViewModel {
-    public ObjectProperty<Device> deviceProperty;
+    public ObjectProperty<List<Device>> deviceProperty;
 
     @InjectScope
     private DeviceListToolbarDetailScope deviceListToolbarDetailScope;
@@ -101,8 +101,8 @@ public class CredentialViewModel implements ViewModel {
     }
 
     public ObservableBooleanValue cmsVisibleProperty() {
-        return Bindings.createBooleanBinding(() -> deviceProperty.get() != null
-                && (deviceProperty.get().getDeviceType() != DeviceType.UNOWNED), deviceProperty);
+        return Bindings.createBooleanBinding(() -> deviceProperty.get() != null && deviceProperty.get().size() == 1
+                && (deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED), deviceProperty);
     }
 
     public ObjectProperty<Response<Boolean>> createCredResponseProperty() {
@@ -122,18 +122,18 @@ public class CredentialViewModel implements ViewModel {
         credListProperty().clear();
 
         if ((newValue != null) && newValue.equals(resourceBundle.getString("client.tab.cms")) && deviceProperty.get() != null
-                && (deviceProperty.get().getDeviceType() != DeviceType.UNOWNED)) {
-            retrieveCreds(deviceProperty.get());
+                && deviceProperty.get().size() == 1 && (deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED)) {
+            retrieveCreds(deviceProperty.get().get(0));
         }
     }
 
-    public void loadCredentials(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
+    public void loadCredentials(ObservableValue<? extends List<Device>> observable, List<Device> oldValue, List<Device> newValue) {
         // Clean Info
         credListProperty().clear();
 
         if (selectedTabProperty().get() != null && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.cms")) && (newValue != null)
-                &&(newValue.getDeviceType() != DeviceType.UNOWNED)) {
-            retrieveCreds(newValue);
+                && newValue.size() == 1 && (newValue.get(0).getDeviceType() != DeviceType.UNOWNED)) {
+            retrieveCreds(newValue.get(0));
         }
     }
 
@@ -194,38 +194,43 @@ public class CredentialViewModel implements ViewModel {
     }
 
     public void provisionIdentityCertificate() {
-        disposable.add(provisionIdentityCertificateUseCase.execute(deviceProperty.get())
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> createCredResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> createCredResponse.setValue(Response.success(true)),
-                        throwable -> createCredResponse.setValue(Response.error(throwable))
-                )
-        );
+        if (deviceProperty.get().size() == 1){
+            disposable.add(provisionIdentityCertificateUseCase.execute(deviceProperty.get().get(0))
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> createCredResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> createCredResponse.setValue(Response.success(true)),
+                            throwable -> createCredResponse.setValue(Response.error(throwable))
+                    )
+            );
+        }
     }
 
     public void provisionRoleCertificate(String roleId, String roleAuthority) {
-        disposable.add(provisionRoleCertificateUseCase.execute(deviceProperty.get(), roleId, roleAuthority)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> createCredResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> createCredResponse.setValue(Response.success(true)),
-                        throwable -> createCredResponse.setValue(Response.error(throwable))
-                )
-        );
+        if (deviceProperty.get().size() == 1){
+            disposable.add(provisionRoleCertificateUseCase.execute(deviceProperty.get().get(0), roleId, roleAuthority)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> createCredResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> createCredResponse.setValue(Response.success(true)),
+                            throwable -> createCredResponse.setValue(Response.error(throwable))
+                    )
+            );
+        }
     }
 
     public void deleteCred(long credId) {
-        disposable.add(deleteCredentialUseCase.execute(deviceProperty.get(), credId)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> deleteCredResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> deleteCredResponse.setValue(Response.success(true)),
-                        throwable -> deleteCredResponse.setValue(Response.error(throwable))
-                ));
-
+        if (deviceProperty.get().size() == 1) {
+            disposable.add(deleteCredentialUseCase.execute(deviceProperty.get().get(0), credId)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> deleteCredResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> deleteCredResponse.setValue(Response.success(true)),
+                            throwable -> deleteCredResponse.setValue(Response.error(throwable))
+                    ));
+        }
     }
 }

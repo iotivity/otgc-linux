@@ -23,9 +23,11 @@ import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
@@ -36,7 +38,8 @@ import org.openconnectivity.otgc.utils.viewmodel.Response;
 
 import javax.inject.Inject;
 import java.net.URL;
-import java.util.ResourceBundle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DeviceListView implements FxmlView<DeviceListViewModel>, Initializable {
 
@@ -64,10 +67,14 @@ public class DeviceListView implements FxmlView<DeviceListViewModel>, Initializa
         listView.itemsProperty().bind(viewModel.devicesListProperty());
         listView.setCellFactory(deviceListView -> new DeviceListViewCell());
 
-        listView.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
-            viewModel.selectedDeviceProperty().setValue(newValue);
-            viewModel.positionSelectedDeviceProperty().setValue(viewModel.devicesListProperty().indexOf(newValue));
-        }));
+        listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        listView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            ObservableList<Device> devices = listView.getSelectionModel().getSelectedItems();
+            viewModel.selectedDeviceProperty().setValue(devices.stream().collect(Collectors.toList()));
+            if (devices.size() == 1) {
+                viewModel.positionSelectedDeviceProperty().setValue(viewModel.devicesListProperty().indexOf(devices.get(0)));
+            }
+        });
 
         viewModel.scanResponseProperty().addListener(this::processScanResponse);
         viewModel.updateDeviceResponseProperty().addListener(this::processUpdateDeviceResponse);
