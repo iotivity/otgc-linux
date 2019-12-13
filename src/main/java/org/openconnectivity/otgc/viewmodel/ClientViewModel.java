@@ -170,7 +170,7 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public ObservableBooleanValue clientVisibleProperty() {
         return Bindings.createBooleanBinding(() -> deviceProperty.get() != null
-                    && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED, deviceProperty);
+                && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED, deviceProperty);
     }
 
     public void loadInfoDevice(ObservableValue<? extends List<Device>> observable, List<Device> oldValue, List<Device> newValue) {
@@ -196,7 +196,7 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void loadGenericClient(ObservableValue<? extends String> observable, String oldValue, String newValue) {
         if (newValue != null  && newValue.equals(resourceBundle.getString("client.tab.generic_client")) && deviceProperty.get() != null
-            && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED){
+                && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED){
             introspect(deviceProperty.get().get(0));
         }
     }
@@ -285,6 +285,7 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
             if (resource.getSupportedOperations().contains("get")) {
                 SerializableResource serializableResource = new SerializableResource();
                 serializableResource.setUri(resource.getPath());
+                serializableResource.setPropertiesAccess(resource.getProperties());
                 serializableResource.setResourceTypes(resource.getResourceTypes());
                 serializableResource.setResourceInterfaces(resource.getInterfaces());
 
@@ -360,6 +361,21 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     public void postRequest(SerializableResource resource, OCRepresentation rep, Object valueArray) {
         if (deviceProperty.get().size() == 1) {
             disposables.add(postRequestUseCase.execute(deviceProperty.get().get(0), resource, rep, valueArray)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            () -> postRequestResponse.setValue(Response.success(true)),
+                            throwable -> {
+                                postRequestResponse.setValue(Response.error(throwable));
+                                observeResourceResponse.setValue(Response.success(resource));
+                            }
+                    ));
+        }
+    }
+
+    public void postRequest(SerializableResource resource, Map<String, Object> values) {
+        if (deviceProperty.get().size() == 1) {
+            disposables.add(postRequestUseCase.execute(deviceProperty.get().get(0), resource, values)
                     .subscribeOn(schedulersFacade.io())
                     .observeOn(schedulersFacade.ui())
                     .subscribe(
