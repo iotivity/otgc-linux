@@ -52,7 +52,7 @@ public class AccessControlViewModel implements ViewModel {
 
     private List<String> selectedVerticalResource = new ArrayList<>();
     private List<String> wildcardList = new ArrayList<>();
-    public ObjectProperty<Device> deviceProperty;
+    public ObjectProperty<List<Device>> deviceProperty;
 
     @InjectScope
     private DeviceListToolbarDetailScope deviceListToolbarDetailScope;
@@ -110,8 +110,8 @@ public class AccessControlViewModel implements ViewModel {
     }
 
     public ObservableBooleanValue amsVisibleProperty() {
-        return Bindings.createBooleanBinding(() -> deviceProperty.get() != null
-                    && deviceProperty.get().getDeviceType() != DeviceType.UNOWNED, deviceProperty);
+        return Bindings.createBooleanBinding(() -> deviceProperty.get() != null && deviceProperty.get().size() == 1
+                    && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED, deviceProperty);
     }
 
     public ObjectProperty<Response<OcAcl>> retrieveAclResponseProperty() {
@@ -135,16 +135,16 @@ public class AccessControlViewModel implements ViewModel {
         wildcardList.add(wildcard);
     }
 
-    public void loadAccessControl(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
+    public void loadAccessControl(ObservableValue<? extends List<Device>> observable, List<Device> oldValue, List<Device> newValue) {
         // Clean Info
         aceListProperty().clear();
         verticalResourceListProperty().clear();
         selectedVerticalResource.clear();
 
         if (selectedTabProperty().get() != null && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.ams"))
-                && newValue != null && newValue.getDeviceType() != DeviceType.UNOWNED) {
-            retrieveAcl(newValue);
-            retrieveVerticalResources(newValue);
+                && newValue != null && newValue.size() == 1 && newValue.get(0).getDeviceType() != DeviceType.UNOWNED) {
+            retrieveAcl(newValue.get(0));
+            retrieveVerticalResources(newValue.get(0));
         }
     }
 
@@ -155,9 +155,9 @@ public class AccessControlViewModel implements ViewModel {
         selectedVerticalResource.clear();
 
         if (newValue != null && newValue.equals(resourceBundle.getString("client.tab.ams")) && deviceProperty.get() != null
-                && deviceProperty.get().getDeviceType() != DeviceType.UNOWNED) {
-            retrieveAcl(deviceProperty.get());
-            retrieveVerticalResources(deviceProperty.get());
+                && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED) {
+            retrieveAcl(deviceProperty.get().get(0));
+            retrieveVerticalResources(deviceProperty.get().get(0));
         }
     }
 
@@ -259,15 +259,17 @@ public class AccessControlViewModel implements ViewModel {
             resources = selectedVerticalResource;
         }
 
-        disposable.add(createAclUseCase.execute(deviceProperty.get(), subjectId, resources, permission)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> createAclResponse.setValue(Response.success(true)),
-                        throwable -> createAclResponse.setValue(Response.error(throwable))
-                )
-        );
+        if (deviceProperty.get().size() == 1) {
+            disposable.add(createAclUseCase.execute(deviceProperty.get().get(0), subjectId, resources, permission)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> createAclResponse.setValue(Response.success(true)),
+                            throwable -> createAclResponse.setValue(Response.error(throwable))
+                    )
+            );
+        }
     }
 
     public void createAce(String roleId, String roleAuthority, long permission, boolean isWildcard) {
@@ -278,15 +280,17 @@ public class AccessControlViewModel implements ViewModel {
             resources = selectedVerticalResource;
         }
 
-        disposable.add(createAclUseCase.execute(deviceProperty.get(), roleId, roleAuthority, resources, permission)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> createAclResponse.setValue(Response.success(true)),
-                        throwable -> createAclResponse.setValue(Response.error(throwable))
-                )
-        );
+        if (deviceProperty.get().size() == 1) {
+            disposable.add(createAclUseCase.execute(deviceProperty.get().get(0), roleId, roleAuthority, resources, permission)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> createAclResponse.setValue(Response.success(true)),
+                            throwable -> createAclResponse.setValue(Response.error(throwable))
+                    )
+            );
+        }
     }
 
     public void createAce(boolean isAuth, long permission, boolean isWildcard) {
@@ -297,25 +301,29 @@ public class AccessControlViewModel implements ViewModel {
             resources = selectedVerticalResource;
         }
 
-        disposable.add(createAclUseCase.execute(deviceProperty.get(), isAuth, resources, permission)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> createAclResponse.setValue(Response.success(true)),
-                        throwable -> createAclResponse.setValue(Response.error(throwable))
-                )
-        );
+        if (deviceProperty.get().size() == 1) {
+            disposable.add(createAclUseCase.execute(deviceProperty.get().get(0), isAuth, resources, permission)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> createAclResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> createAclResponse.setValue(Response.success(true)),
+                            throwable -> createAclResponse.setValue(Response.error(throwable))
+                    )
+            );
+        }
     }
 
     public void deleteACL(long aceId) {
-        disposable.add(deleteAclUseCase.execute(deviceProperty.get(), aceId)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> deleteAclResponse.setValue(Response.loading()))
-                .subscribe(
-                        () -> deleteAclResponse.setValue(Response.success(aceId)),
-                        throwable -> deleteAclResponse.setValue(Response.error(throwable))
-        ));
+        if (deviceProperty.get().size() == 1) {
+            disposable.add(deleteAclUseCase.execute(deviceProperty.get().get(0), aceId)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> deleteAclResponse.setValue(Response.loading()))
+                    .subscribe(
+                            () -> deleteAclResponse.setValue(Response.success(aceId)),
+                            throwable -> deleteAclResponse.setValue(Response.error(throwable))
+                    ));
+        }
     }
 }

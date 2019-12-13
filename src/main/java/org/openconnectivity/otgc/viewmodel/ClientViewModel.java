@@ -52,7 +52,7 @@ import java.util.*;
 
 public class ClientViewModel implements ViewModel, SceneLifecycle {
 
-    public ObjectProperty<Device> deviceProperty;
+    public ObjectProperty<List<Device>> deviceProperty;
 
     @InjectScope
     private DeviceListToolbarDetailScope deviceListToolbarDetailScope;
@@ -170,32 +170,34 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public ObservableBooleanValue clientVisibleProperty() {
         return Bindings.createBooleanBinding(() -> deviceProperty.get() != null
-                    && deviceProperty.get().getDeviceType() != DeviceType.UNOWNED, deviceProperty);
+                    && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED, deviceProperty);
     }
 
-    public void loadInfoDevice(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
+    public void loadInfoDevice(ObservableValue<? extends List<Device>> observable, List<Device> oldValue, List<Device> newValue) {
         // Clean Info
         infoListProperty().clear();
 
-        if (newValue == null || (oldValue != null && !newValue.getDeviceId().equals(oldValue.getDeviceId()))) {
+        if (newValue == null || (oldValue != null
+                && newValue.size() == 1 && oldValue.size() == 1
+                && !newValue.get(0).getDeviceId().equals(oldValue.get(0).getDeviceId()))) {
             cancellAllObserveResource();
         }
 
-        if ((newValue != null) && newValue.getDeviceType() != DeviceType.UNOWNED) {
+        if ((newValue != null) && newValue.size() == 1 && newValue.get(0).getDeviceType() != DeviceType.UNOWNED) {
 
             // Load Info
-            loadDeviceInfo(newValue);
-            loadPlatformInfo(newValue);
+            loadDeviceInfo(newValue.get(0));
+            loadPlatformInfo(newValue.get(0));
             if (selectedTabProperty().get() != null  && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.generic_client"))) {
-                introspect(newValue);
+                introspect(newValue.get(0));
             }
         }
     }
 
     public void loadGenericClient(ObservableValue<? extends String> observable, String oldValue, String newValue) {
         if (newValue != null  && newValue.equals(resourceBundle.getString("client.tab.generic_client")) && deviceProperty.get() != null
-            && deviceProperty.get().getDeviceType() != DeviceType.UNOWNED){
-            introspect(deviceProperty.get());
+            && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED){
+            introspect(deviceProperty.get().get(0));
         }
     }
 
@@ -286,25 +288,31 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
                 serializableResource.setResourceTypes(resource.getResourceTypes());
                 serializableResource.setResourceInterfaces(resource.getInterfaces());
 
-                getRequest(deviceProperty.get(), serializableResource);
+                if (deviceProperty.get().size() == 1) {
+                    getRequest(deviceProperty.get().get(0), serializableResource);
+                }
             }
         }
     }
 
     public void findResources() {
-        disposables.add(getResourcesUseCase.execute(deviceProperty.get())
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> getResourcesResponse.setValue(Response.loading()))
-                .subscribe(
-                        serializableResources -> getResourcesResponse.setValue(Response.success(serializableResources)),
-                        throwable -> getResourcesResponse.setValue(Response.error(throwable))
-                ));
+        if (deviceProperty.get().size() == 1) {
+            disposables.add(getResourcesUseCase.execute(deviceProperty.get().get(0))
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> getResourcesResponse.setValue(Response.loading()))
+                    .subscribe(
+                            serializableResources -> getResourcesResponse.setValue(Response.success(serializableResources)),
+                            throwable -> getResourcesResponse.setValue(Response.error(throwable))
+                    ));
+        }
     }
 
     public void buildUiForRetrieveResources(List<SerializableResource> resources) {
-        for(SerializableResource resource : resources) {
-            getRequest(deviceProperty.get(), resource);
+        if (deviceProperty.get().size() == 1) {
+            for(SerializableResource resource : resources) {
+                getRequest(deviceProperty.get().get(0), resource);
+            }
         }
     }
 
@@ -350,23 +358,30 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     }
 
     public void postRequest(SerializableResource resource, OCRepresentation rep, Object valueArray) {
-        disposables.add(postRequestUseCase.execute(deviceProperty.get(), resource, rep, valueArray)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .subscribe(
-                        () -> postRequestResponse.setValue(Response.success(true)),
-                        throwable -> postRequestResponse.setValue(Response.error(throwable))
-                ));
+        if (deviceProperty.get().size() == 1) {
+            disposables.add(postRequestUseCase.execute(deviceProperty.get().get(0), resource, rep, valueArray)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            () -> postRequestResponse.setValue(Response.success(true)),
+                            throwable -> {
+                                postRequestResponse.setValue(Response.error(throwable));
+                                observeResourceResponse.setValue(Response.success(resource));
+                            }
+                    ));
+        }
     }
 
     public void registerResourceObserve(SerializableResource resource) {
-        disposables.add(observeResourceUseCase.execute(deviceProperty.get(), resource)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .subscribe(
-                        serializableResource -> observeResourceResponse.setValue(Response.success(serializableResource)),
-                        throwable -> observeResourceResponse.setValue(Response.error(throwable))
-                ));
+        if (deviceProperty.get().size() == 1) {
+            disposables.add(observeResourceUseCase.execute(deviceProperty.get().get(0), resource)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            serializableResource -> observeResourceResponse.setValue(Response.success(serializableResource)),
+                            throwable -> observeResourceResponse.setValue(Response.error(throwable))
+                    ));
+        }
     }
 
     public void cancelResourceObserve(SerializableResource resource) {
