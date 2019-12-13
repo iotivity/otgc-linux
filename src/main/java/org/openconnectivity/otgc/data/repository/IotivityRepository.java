@@ -162,7 +162,10 @@ public class IotivityRepository {
                     deviceDao.insert(new DeviceEntity(deviceId, device.getName(), endpoints, DeviceType.UNOWNED, Device.NOTHING_PERMITS));
                 }
 
-                unownedDevices.add(new Device(DeviceType.UNOWNED, deviceId, new OcDeviceInfo(), endpoints, Device.NOTHING_PERMITS));
+                Device device1 = new Device(DeviceType.UNOWNED, deviceId, new OcDeviceInfo(), endpoints, Device.NOTHING_PERMITS);
+                if (!unownedDevices.contains(device1)) {
+                    unownedDevices.add(device1);
+                }
             };
 
             int ret;
@@ -202,7 +205,10 @@ public class IotivityRepository {
                     deviceDao.insert(new DeviceEntity(deviceId, device.getName(), endpoints, DeviceType.OWNED_BY_SELF, Device.FULL_PERMITS));
                 }
 
-                ownedDevices.add(new Device(DeviceType.OWNED_BY_SELF, deviceId, new OcDeviceInfo(), endpoints, Device.FULL_PERMITS));
+                Device device1 = new Device(DeviceType.OWNED_BY_SELF, deviceId, new OcDeviceInfo(), endpoints, Device.FULL_PERMITS);
+                if (!ownedDevices.contains(device1)) {
+                    ownedDevices.add(device1);
+                }
             };
 
             int ret;
