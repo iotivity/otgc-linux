@@ -33,6 +33,9 @@ sudo apt-get -y install openjdk-8-jdk
 #sudo apt-get -y install libopenjfx-jni
 #sudo apt-get -y install libopenjfx-java
 # install downgraded java components
+sudo apt-get remove openjfx
+sudo apt-get remove libopenjfx-java
+sudo apt-get remove libopenjfx-jni
 sudo apt-get -y  install openjfx=8u161-b12-1ubuntu2 --allow-downgrades
 sudo apt-get -y install libopenjfx-java=8u161-b12-1ubuntu2 --allow-downgrades
 sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2 --allow-downgrades
