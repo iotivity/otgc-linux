@@ -466,7 +466,12 @@ public class ToolbarViewModel implements ViewModel {
                                                                                                             .subscribe(
                                                                                                                     deviceRole -> {
                                                                                                                         ownedDevice.setDeviceRole(deviceRole);
-                                                                                                                        String deviceName = ownedDevice.getDeviceRole().toString() + ownedDevice.getDeviceId().substring(0, 5);
+                                                                                                                        String deviceName;
+                                                                                                                        if (ownedDevice.getDeviceInfo().getName() == null || ownedDevice.getDeviceInfo().getName().isEmpty()) {
+                                                                                                                            deviceName = ownedDevice.getDeviceRole().toString() + "_" + ownedDevice.getDeviceId().substring(0, 5);
+                                                                                                                        } else {
+                                                                                                                            deviceName = ownedDevice.getDeviceInfo().getName() + "_" + ownedDevice.getDeviceId().substring(0, 5);
+                                                                                                                        }
                                                                                                                         ownedDevice.getDeviceInfo().setName(deviceName);
                                                                                                                         setDeviceName(ownedDevice.getDeviceId(), deviceName);
                                                                                                                         deviceRoleMultiResponse.setValue(Response.success(ownedDevice));
