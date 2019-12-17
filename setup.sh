@@ -7,9 +7,9 @@ OTGC_VERSION=2.8.0
 #
 # system update
 #
-sudo apt-get -y update
-sudo apt-get -y upgrade
-sudo apt-get -y update
+#sudo apt-get -y update
+#sudo apt-get -y upgrade
+#sudo apt-get -y update
 
 # make sure that git is there, because the scripts are using git.
 # nano is just good to have,
