@@ -11,7 +11,7 @@
 
 # Constants
 PROJECT_NAME="otgc"
-VERSION="2.2.0"
+VERSION="2.9.0"
 
 program=$0
 
@@ -117,7 +117,7 @@ else
     echo "cd /usr/share/$PROJECT_NAME" >> "$(pwd)/out/$PROJECT_NAME.sh"
     echo "mkdir logs"$'\n'  >> "$(pwd)/out/$PROJECT_NAME.sh"
     echo "DATE=\$(date +\"%Y%m%d%H%M\")"$'\n'  >> "$(pwd)/out/$PROJECT_NAME.sh"
-    echo "java -jar /usr/lib/$PROJECT_NAME/$PROJECT_NAME-$VERSION-jfx.jar > logs/otgc_\$DATE.log"$'\n' >> "$(pwd)/out/$PROJECT_NAME.sh"
+    echo "java -Dprism.order=sw -jar /usr/lib/$PROJECT_NAME/$PROJECT_NAME-$VERSION-jfx.jar > logs/otgc_\$DATE.log"$'\n' >> "$(pwd)/out/$PROJECT_NAME.sh"
     chmod 755 "$(pwd)/out/$PROJECT_NAME.sh"
     cp "$(pwd)/out/$PROJECT_NAME.sh" $(pwd)/out/$PROJECT_NAME-$VERSION/usr/bin
     rm $(pwd)/out/$PROJECT_NAME.sh

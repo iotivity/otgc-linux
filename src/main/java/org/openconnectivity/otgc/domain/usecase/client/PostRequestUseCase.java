@@ -26,6 +26,7 @@ import org.openconnectivity.otgc.domain.model.client.SerializableResource;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 
 import javax.inject.Inject;
+import java.util.Map;
 
 public class PostRequestUseCase {
     private final IotivityRepository iotivityRepository;
@@ -38,5 +39,10 @@ public class PostRequestUseCase {
     public Completable execute(Device device, SerializableResource resource, OCRepresentation rep, Object valueArray) {
         return iotivityRepository.getSecureEndpoint(device)
                 .flatMapCompletable(endpoint -> iotivityRepository.post(endpoint, resource.getUri(), device.getDeviceId(), rep, valueArray));
+    }
+
+    public Completable execute(Device device, SerializableResource resource, Map<String, Object> values) {
+        return iotivityRepository.getSecureEndpoint(device)
+                .flatMapCompletable(endpoint -> iotivityRepository.post(endpoint, resource.getUri(), device.getDeviceId(), values));
     }
 }

@@ -54,8 +54,8 @@ public class LinkDevicesViewModel implements ViewModel {
     private ListProperty<String> ownedDevices = new SimpleListProperty<>();
     public ListProperty<String> ownedDevicesProperty() { return ownedDevices; }
 
-    private ObjectProperty<Device> device = new SimpleObjectProperty<>();
-    public ObjectProperty<Device> deviceProperty() {
+    private ObjectProperty<List<Device>> device = new SimpleObjectProperty<>();
+    public ObjectProperty<List<Device>> deviceProperty() {
         return device;
     }
     private StringProperty selectedTab = new SimpleStringProperty();
@@ -135,8 +135,8 @@ public class LinkDevicesViewModel implements ViewModel {
     }
 
     public ObservableBooleanValue linkedDevicesVisibleProperty() {
-        return Bindings.createBooleanBinding(() -> deviceProperty().get() != null
-                && (deviceProperty().get().getDeviceType() == DeviceType.OWNED_BY_SELF), device);
+        return Bindings.createBooleanBinding(() -> deviceProperty().get() != null && deviceProperty().get().size() == 1
+                && (deviceProperty().get().get(0).getDeviceType() == DeviceType.OWNED_BY_SELF), device);
     }
 
     public void ownedDeviceListProperty() {
@@ -148,7 +148,7 @@ public class LinkDevicesViewModel implements ViewModel {
         }
         for (Device device : devicesListProperty().filtered(device ->
                 (device.getDeviceType() == DeviceType.OWNED_BY_SELF
-                && device.getDeviceRole() != deviceProperty().get().getDeviceRole()))) {
+                && device.getDeviceRole() != deviceProperty().get().get(0).getDeviceRole()))) {
             if (!tmp.contains(device.getDeviceId())) {
                 tmp.add(device.getDeviceId());
             }
@@ -156,26 +156,26 @@ public class LinkDevicesViewModel implements ViewModel {
         ownedDevicesProperty().setValue(FXCollections.observableArrayList(tmp));
     }
 
-    public void loadLinked(ObservableValue<? extends Device> observable, Device oldValue, Device newValue) {
+    public void loadLinked(ObservableValue<? extends List<Device>> observable, List<Device> oldValue, List<Device> newValue) {
         if (selectedTabProperty().get() != null && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.linkeddevices"))
-                && newValue != null && newValue.getDeviceType() == DeviceType.OWNED_BY_SELF) {
+                && newValue != null && newValue.size() == 1 && newValue.get(0).getDeviceType() == DeviceType.OWNED_BY_SELF) {
             // Load linked devices
-            loadLinkedDevices(newValue);
+            loadLinkedDevices(newValue.get(0));
 
             // Load linked roles
-            loadLinkedRoles(newValue);
+            loadLinkedRoles(newValue.get(0));
         }
     }
 
     public void loadLinked(ObservableValue<? extends String> observable, String oldValue, String newValue) {
         if (newValue != null && newValue.equals(resourceBundle.getString("client.tab.linkeddevices"))
-                && deviceProperty().get() != null && deviceProperty().get().getDeviceType() == DeviceType.OWNED_BY_SELF)
+                && deviceProperty().get() != null && deviceProperty().get().size() == 1 && deviceProperty().get().get(0).getDeviceType() == DeviceType.OWNED_BY_SELF)
         {
             // Load linked devices
-            loadLinkedDevices(deviceProperty().get());
+            loadLinkedDevices(deviceProperty().get().get(0));
 
             // Load linked roles
-            loadLinkedRoles(deviceProperty().get());
+            loadLinkedRoles(deviceProperty().get().get(0));
         }
     }
 
@@ -210,7 +210,7 @@ public class LinkDevicesViewModel implements ViewModel {
     public void retrieveLinkedRoles(Device device) {
         Single<List<String>> useCase;
 
-        if (deviceProperty().get().getDeviceRole().equals(DeviceRole.CLIENT)) {
+        if (device.getDeviceRole().equals(DeviceRole.CLIENT)) {
             useCase = retrieveLinkedRolesForClientUseCase.execute(device);
         } else {
             useCase = retrieveLinkedRolesForServerUseCase.execute(device);
@@ -244,24 +244,26 @@ public class LinkDevicesViewModel implements ViewModel {
         Device client;
         Device server;
 
-        if (deviceProperty().get().getDeviceRole().equals(DeviceRole.SERVER)) {
-            server = deviceProperty().get();
-            client = devicesList.get().filtered(d -> d.getDeviceId().equals(deviceId)).get(0);
-        } else {
-            client = deviceProperty().get();
-            server = devicesList.get().filtered(d -> d.getDeviceId().equals(deviceId)).get(0);
-        }
+        if (deviceProperty().get().size() == 1) {
+            if (deviceProperty().get().get(0).getDeviceRole().equals(DeviceRole.SERVER)) {
+                server = deviceProperty().get().get(0);
+                client = devicesList.get().filtered(d -> d.getDeviceId().equals(deviceId)).get(0);
+            } else {
+                client = deviceProperty().get().get(0);
+                server = devicesList.get().filtered(d -> d.getDeviceId().equals(deviceId)).get(0);
+            }
 
-        disposables.add(linkDevicesUseCase.execute(client, server)
-            .subscribeOn(schedulersFacade.io())
-            .observeOn(schedulersFacade.ui())
-            .subscribe(
-                    ()-> {
-                        LOG.debug("LinkDevices has been completed");
-                        loadLinkedDevices(deviceProperty().get());
-                    },
-                    throwable -> LOG.error("LinkDevices has failed")
-            ));
+            disposables.add(linkDevicesUseCase.execute(client, server)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            ()-> {
+                                LOG.debug("LinkDevices has been completed");
+                                loadLinkedDevices(deviceProperty().get().get(0));
+                            },
+                            throwable -> LOG.error("LinkDevices has failed")
+                    ));
+        }
     }
 
     public void setLinkedRoles(List<String> linkedRoles) {
@@ -281,57 +283,65 @@ public class LinkDevicesViewModel implements ViewModel {
     public void linkRoleCertificate(String roleId, String roleAuthority) {
         Completable useCase;
 
-        if (deviceProperty().get().getDeviceRole().equals(DeviceRole.CLIENT)) {
-            useCase = linkRoleForClientUseCase.execute(deviceProperty().get(), roleId, roleAuthority);
-        } else {
-            useCase = linkRoleForServerUseCase.execute(deviceProperty().get(), roleId, roleAuthority);
+        if (deviceProperty().get().size() == 1) {
+            if (deviceProperty().get().get(0).getDeviceRole().equals(DeviceRole.CLIENT)) {
+                useCase = linkRoleForClientUseCase.execute(deviceProperty().get().get(0), roleId, roleAuthority);
+            } else {
+                useCase = linkRoleForServerUseCase.execute(deviceProperty().get().get(0), roleId, roleAuthority);
+            }
+
+            disposables.add(useCase
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            ()-> {
+                                LOG.debug("LinkRole has been completed");
+                                loadLinkedRoles(deviceProperty().get().get(0));
+                            },
+                            throwable -> LOG.error("LinkRole has failed")
+                    ));
         }
 
-        disposables.add(useCase
-            .subscribeOn(schedulersFacade.io())
-            .observeOn(schedulersFacade.ui())
-            .subscribe(
-                ()-> {
-                    LOG.debug("LinkRole has been completed");
-                    loadLinkedRoles(deviceProperty().get());
-                },
-                throwable -> LOG.error("LinkRole has failed")
-            ));
     }
 
     public void unlinkDevices(String serverId) {
         Device server = devicesList.get().filtered(d -> d.getDeviceId().equals(serverId)).get(0);
 
-        disposables.add(unlinkDevicesUseCase.execute(deviceProperty().get(), server)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .subscribe(
-                        ()-> {
-                            LOG.debug("UnlinkDevices has been completed");
-                            loadLinkedDevices(deviceProperty().get());
-                        },
-                        throwable -> LOG.error("UnlinkDevices has failed")
-                ));
+        if (deviceProperty().get().size() == 1) {
+            disposables.add(unlinkDevicesUseCase.execute(deviceProperty().get().get(0), server)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            ()-> {
+                                LOG.debug("UnlinkDevices has been completed");
+                                loadLinkedDevices(deviceProperty().get().get(0));
+                            },
+                            throwable -> LOG.error("UnlinkDevices has failed")
+                    ));
+        }
     }
 
     public void unlinkRole(String roleId) {
         Completable useCase;
 
-        if (deviceProperty().get().getDeviceRole().equals(DeviceRole.CLIENT)) {
-            useCase = unlinkRoleForClientUseCase.execute(deviceProperty().get(), roleId);
-        } else {
-            useCase = unlinkRoleForServerUseCase.execute(deviceProperty().get(), roleId);
+        if (deviceProperty().get().size() == 1) {
+            if (deviceProperty().get().get(0).getDeviceRole().equals(DeviceRole.CLIENT)) {
+                useCase = unlinkRoleForClientUseCase.execute(deviceProperty().get().get(0), roleId);
+            } else {
+                useCase = unlinkRoleForServerUseCase.execute(deviceProperty().get().get(0), roleId);
+            }
+
+            disposables.add(useCase
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            ()-> {
+                                LOG.debug("UnlinkRole has been completed");
+                                loadLinkedRoles(deviceProperty().get().get(0));
+                            },
+                            throwable -> LOG.error("UnlinkRole has failed")
+                    ));
         }
 
-        disposables.add(useCase
-            .subscribeOn(schedulersFacade.io())
-            .observeOn(schedulersFacade.ui())
-            .subscribe(
-                ()-> {
-                    LOG.debug("UnlinkRole has been completed");
-                    loadLinkedRoles(deviceProperty().get());
-                },
-                throwable -> LOG.error("UnlinkRole has failed")
-            ));
     }
 }

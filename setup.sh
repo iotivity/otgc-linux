@@ -2,14 +2,14 @@
 set -x #echo on
 # build setup script to be used with an curl command
 #
-OTGC_VERSION=2.2.0
+OTGC_VERSION=2.9.0
 
 #
 # system update
 #
-sudo apt-get -y update
-sudo apt-get -y upgrade
-sudo apt-get -y update
+#sudo apt-get -y update
+#sudo apt-get -y upgrade
+#sudo apt-get -y update
 
 # make sure that git is there, because the scripts are using git.
 # nano is just good to have,
@@ -29,13 +29,16 @@ sudo apt-get -y install swig
 #
 sudo apt-get -y install openjdk-8-jdk
 # install java components, but later overwrite them with the downgraded versions if they exist on the system
-sudo apt-get -y install openjfx
-sudo apt-get -y install libopenjfx-jni
-sudo apt-get -y install libopenjfx-java
+#sudo apt-get -y install openjfx
+#sudo apt-get -y install libopenjfx-jni
+#sudo apt-get -y install libopenjfx-java
 # install downgraded java components
-sudo apt-get -y install openjfx=8u161-b12-1ubuntu2 
-sudo apt-get -y install libopenjfx-java=8u161-b12-1ubuntu2 
-sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2
+sudo apt-get -y autoremove openjfx
+sudo apt-get -y autoremove libopenjfx-java
+sudo apt-get -y autoremove libopenjfx-jni
+sudo apt-get -y  install openjfx=8u161-b12-1ubuntu2 --allow-downgrades
+sudo apt-get -y install libopenjfx-java=8u161-b12-1ubuntu2 --allow-downgrades
+sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2 --allow-downgrades
 
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
@@ -80,6 +83,8 @@ cp ./iotivity-lite/swig/iotivity-lite-java/libs/*.jar ./otgc-linux/lib/.
 # build otgc (in the otgc-linux folder)
 #
 cd otgc-linux
+
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 
 # install the create lib, so that maven can find it during the build
 mvn install:install-file \

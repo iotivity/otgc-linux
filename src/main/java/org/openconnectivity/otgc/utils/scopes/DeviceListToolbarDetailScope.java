@@ -23,10 +23,12 @@ import de.saxsys.mvvmfx.Scope;
 import javafx.beans.property.*;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 
+import java.util.List;
+
 public class DeviceListToolbarDetailScope implements Scope {
 
-    private final ObjectProperty<Device> selectedDevice = new SimpleObjectProperty<>(this, "selectedDevice");
-    public ObjectProperty<Device> selectedDeviceProperty() {
+    private final ObjectProperty<List<Device>> selectedDevice = new SimpleObjectProperty<>(this, "selectedDevice");
+    public ObjectProperty<List<Device>> selectedDeviceProperty() {
         return this.selectedDevice;
     }
 
@@ -43,7 +45,7 @@ public class DeviceListToolbarDetailScope implements Scope {
         return this.selectedTab;
     }
 
-    public final Device getSelectedDevice() {
+    /*public final Device getSelectedDevice() {
         return this.selectedDeviceProperty().get();
     }
     public final void setSelectedDevice(final Device selectedDevice) {
@@ -55,5 +57,5 @@ public class DeviceListToolbarDetailScope implements Scope {
     }
     public final void setPositionSelectedDevice(final int position) {
         this.positionSelectedDeviceProperty().set(position);
-    }
+    }*/
 }

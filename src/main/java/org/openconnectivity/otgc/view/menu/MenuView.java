@@ -20,9 +20,7 @@
 package org.openconnectivity.otgc.view.menu;
 
 import com.google.inject.Inject;
-import de.saxsys.mvvmfx.FluentViewLoader;
-import de.saxsys.mvvmfx.FxmlView;
-import de.saxsys.mvvmfx.InjectViewModel;
+import de.saxsys.mvvmfx.*;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
@@ -57,7 +55,7 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
 
     @FXML
     public void discover() {
-        // TODO
+        viewModel.discover();
     }
 
     @FXML

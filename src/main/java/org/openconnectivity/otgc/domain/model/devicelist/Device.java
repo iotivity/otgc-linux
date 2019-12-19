@@ -233,4 +233,14 @@ public class Device implements Comparable<Device> {
 
         return res;
     }
+
+    @Override
+    public boolean equals(Object device) {
+        boolean same = false;
+
+        if (device != null && device instanceof Device) {
+            same = this.deviceId.equals(((Device)device).getDeviceId());
+        }
+        return same;
+    }
 }

@@ -59,8 +59,8 @@ public class DeviceListViewModel implements ViewModel {
     private ListProperty<Device> devicesList = new SimpleListProperty<>();
     public ListProperty<Device> devicesListProperty() { return devicesList; }
 
-    private final ObjectProperty<Device> selectedDevice = new SimpleObjectProperty<>();
-    public final ObjectProperty<Device> selectedDeviceProperty() {
+    private final ObjectProperty<List<Device>> selectedDevice = new SimpleObjectProperty<>();
+    public final ObjectProperty<List<Device>> selectedDeviceProperty() {
         return selectedDevice;
     }
     private final IntegerProperty positionSelectedDevice = new SimpleIntegerProperty();
@@ -81,6 +81,12 @@ public class DeviceListViewModel implements ViewModel {
         deviceListToolbarDetailScope.devicesListProperty().bind(devicesList);
         // Notification subscribe
         deviceListToolbarDetailScope.subscribe(NotificationKey.SCAN_DEVICES,
+                ((key, payload) -> {
+                    notificationCenter.publish(NotificationKey.REFRESH_ID);
+                    onDiscoverRequest();
+                })
+        );
+        notificationCenter.subscribe(NotificationKey.SCAN_DEVICES,
                 ((key, payload) -> {
                     notificationCenter.publish(NotificationKey.REFRESH_ID);
                     onDiscoverRequest();
@@ -138,41 +144,41 @@ public class DeviceListViewModel implements ViewModel {
         devicesList.clear();
 
         disposables.add(scanDevicesUseCase.execute()
-            .map(device -> {
-                device.setDeviceInfo(getDeviceInfoUseCase.execute(device).blockingGet());
-                return device;
-            })
-            .map(device -> {
-                device.setDeviceRole(getDeviceRoleUseCase.execute(device).blockingGet());
-                return device;
-            })
-            .map(device -> {
-                if (device.getDeviceType().equals(DeviceType.OWNED_BY_SELF)) {
-                    String storedDeviceName = getDeviceNameUseCase.execute(device.getDeviceId()).blockingGet();
-                    if (storedDeviceName != null && !storedDeviceName.isEmpty()) {
-                        device.getDeviceInfo().setName(storedDeviceName);
+                .map(device -> {
+                    device.setDeviceInfo(getDeviceInfoUseCase.execute(device).blockingGet());
+                    return device;
+                })
+                .map(device -> {
+                    device.setDeviceRole(getDeviceRoleUseCase.execute(device).blockingGet());
+                    return device;
+                })
+                .map(device -> {
+                    if (device.getDeviceType().equals(DeviceType.OWNED_BY_SELF)) {
+                        String storedDeviceName = getDeviceNameUseCase.execute(device.getDeviceId()).blockingGet();
+                        if (storedDeviceName != null && !storedDeviceName.isEmpty()) {
+                            device.getDeviceInfo().setName(storedDeviceName);
+                        }
                     }
-                }
-                return device;
-            })
-            .subscribeOn(schedulersFacade.io())
-            .observeOn(schedulersFacade.ui())
-            .doOnSubscribe(__ -> scanResponse.setValue(Response.loading()))
-            .doOnComplete(() -> scanResponse.setValue(Response.complete()))
-            .subscribe(
-                    device -> scanResponse.setValue(Response.success(device)),
-                    throwable -> scanResponse.setValue(Response.error(throwable))
-            ));
+                    return device;
+                })
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .doOnSubscribe(__ -> scanResponse.setValue(Response.loading()))
+                .doOnComplete(() -> scanResponse.setValue(Response.complete()))
+                .subscribe(
+                        device -> scanResponse.setValue(Response.success(device)),
+                        throwable -> scanResponse.setValue(Response.error(throwable))
+                ));
     }
 
     public void updateDevice(Device device) {
         disposables.add(getDeviceDatabaseUseCase.execute(device)
-            .subscribeOn(schedulersFacade.io())
-            .observeOn(schedulersFacade.ui())
-            .subscribe(
-                    device1 -> updateDeviceResponse.setValue(Response.success(device1)),
-                    throwable -> {}
-            ));
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe(
+                        device1 -> updateDeviceResponse.setValue(Response.success(device1)),
+                        throwable -> {}
+                ));
     }
 
     private void updateItem(int positionToUpdate, Device deviceToUpdate) {

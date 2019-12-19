@@ -29,9 +29,14 @@ import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.domain.model.devicelist.DeviceType;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
@@ -89,6 +94,11 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         viewModel.deviceInfoProperty().addListener(this::processDeviceInfoResponse);
         viewModel.deviceRoleProperty().addListener(this::processDeviceRoleResponse);
         viewModel.provisionAceOtmProperty().addListener(this::processProvisionAceOtmResponse);
+        viewModel.onboardWaitingProperty().addListener(this::processOnboardWaitingResponse);
+        viewModel.otmMultiResponseProperty().addListener(this::processOtmMultiResponse);
+        viewModel.deviceInfoMultiProperty().addListener(this::processDeviceInfoMultiResponse);
+        viewModel.deviceRoleMultiProperty().addListener(this::processDeviceRoleMultiResponse);
+        viewModel.provisionAceOtmMultiProperty().addListener(this::processProvisionAceOtmMultiResponse);
         viewModel.offboardResponseProperty().addListener(this::processOffboardResponse);
         viewModel.clientModeResponseProperty().addListener(this::processClientModeResponse);
         viewModel.obtModeResponseProperty().addListener(this::processObtModeResponse);
@@ -114,7 +124,7 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         Platform.runLater(() -> {
             ChoiceDialog alertDialog = new ChoiceDialog(options.get(0), options);
             alertDialog.setTitle(resourceBundle.getString("dialog.title.select_oxm"));
-            alertDialog.setHeaderText("OXM: ");
+            alertDialog.setHeaderText("OTM: ");
 
             Optional<String> result = alertDialog.showAndWait();
             if (result.isPresent()) {
@@ -154,23 +164,20 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
 
     @FXML
     public void handleOnboardButton() {
-        switch(viewModel.deviceProperty.get().getDeviceType()) {
-            case UNOWNED:
-                positionBeingUpdated = viewModel.positionDeviceProperty().get();
-                viewModel.doOwnershipTransfer(viewModel.deviceProperty.get());
-                break;
-            case OWNED_BY_SELF:
-            case OWNED_BY_OTHER:
-            default:
-                break;
+        if (viewModel.deviceProperty.get().size() > 1) {
+            viewModel.onboardAllDevices(viewModel.deviceProperty.get());
+        } else {
+            positionBeingUpdated = viewModel.positionDeviceProperty().get();
+            viewModel.doOwnershipTransfer(viewModel.deviceProperty.get().get(0));
         }
     }
 
     @FXML
     public void handleOffboardButton() {
-        positionBeingUpdated = viewModel.positionDeviceProperty().get();
-
-        viewModel.offboard(viewModel.deviceProperty.get());
+        if (viewModel.deviceProperty.get().size() == 1) {
+            positionBeingUpdated = viewModel.positionDeviceProperty().get();
+            viewModel.offboard(viewModel.deviceProperty.get().get(0));
+        }
     }
 
     @FXML
@@ -260,6 +267,109 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
     }
 
     private void processProvisionAceOtmResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                break;
+            case ERROR:
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.provision_ace_otm.error"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private Stage waitingModal;
+
+    private void processOnboardWaitingResponse(ObservableValue<? extends Response<Boolean>> observableValue, Response<Boolean> oldValue, Response<Boolean> newValue) {
+        switch (newValue.status) {
+            case SUCCESS:
+                if (newValue.data) {
+                    if (waitingModal == null) {
+                        waitingModal = new Stage();
+                        waitingModal.initModality(Modality.APPLICATION_MODAL);
+                        waitingModal.initStyle(StageStyle.UTILITY);
+                        //waitingModal.setAlwaysOnTop(true);
+                        waitingModal.setTitle("Waiting");
+                        waitingModal.setOnCloseRequest(event -> {
+                            event.consume();
+                        });
+                        VBox vBox = new VBox(new Label("Please, wait while selected devices are onboarded."));
+                        vBox.setAlignment(Pos.CENTER);
+                        Scene scene = new Scene(vBox, 400, 100);
+                        waitingModal.setScene(scene);
+                        waitingModal.initOwner(primaryStage);
+                        waitingModal.show();
+
+                        notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, true);
+                        Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.load"));
+                    }
+                } else {
+                    if (waitingModal != null && waitingModal.isShowing()) {
+                        waitingModal.close();
+                        waitingModal = null;
+
+                        notificationCenter.publish(NotificationKey.SET_PROGRESS_STATUS, false);
+                        viewModel.onScanPressed();
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void processOtmMultiResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case SUCCESS:
+                break;
+            case ERROR:
+                LOG.debug(newValue.message);
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.otm.error"));
+                break;
+        }
+    }
+
+    private void processDeviceInfoMultiResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                break;
+            case ERROR:
+                LOG.debug(newValue.message);
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.get_device_info.error"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void processDeviceRoleMultiResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
+        switch (newValue.status) {
+            case LOADING:
+                break;
+            case SUCCESS:
+                /*if (newValue.data != null) {
+                    if (newValue.data.getDeviceType() == DeviceType.OWNED_BY_SELF) {
+                        showSetDeviceNameDialog(positionBeingUpdated, newValue.data, newValue.data.getDeviceId(), newValue.data.getDeviceInfo().getName());
+                    } else {
+                        viewModel.updateItem(positionBeingUpdated, newValue.data);
+                    }
+                    positionBeingUpdated = 0;
+                }*/
+                break;
+            case ERROR:
+                LOG.debug(newValue.message);
+                Toast.show(primaryStage, resourceBundle.getString("toolbar.get_device_role.error"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void processProvisionAceOtmMultiResponse(ObservableValue<? extends Response<Device>> observableValue, Response<Device> oldValue, Response<Device> newValue) {
         switch (newValue.status) {
             case LOADING:
                 break;

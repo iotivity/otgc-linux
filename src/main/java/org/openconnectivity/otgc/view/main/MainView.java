@@ -77,15 +77,15 @@ public class MainView implements FxmlView<MainViewModel>, Initializable {
     }
 
     private String verifyPin = "";
-    OCSetRandomPinHandler randomPinCallbackListener = () -> {
+    OCSetRandomPinHandler randomPinCallbackListener = (String uuid) -> {
         LOG.debug("Inside randomPinListener");
         final Object lock = new Object();
         Platform.runLater(() -> {
             ButtonType yesButton = new ButtonType("Yes", ButtonBar.ButtonData.OK_DONE);
 
             Alert alertDialog = new Alert(Alert.AlertType.CONFIRMATION);
-            alertDialog.setTitle("Insert random PIN");
-            alertDialog.setHeaderText("PIN: ");
+            alertDialog.setTitle(uuid);
+            alertDialog.setHeaderText("Insert random PIN: ");
             final JFXTextField input = new JFXTextField();
             alertDialog.getDialogPane().setGraphic(input);
             alertDialog.getButtonTypes().clear();
