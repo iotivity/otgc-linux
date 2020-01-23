@@ -145,7 +145,7 @@ The following command executes all steps indicated above for building and instal
 
    curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
    
-note: when the executable does start, please reinstall jfx manually by entering on the commandline:
+note: __when the executable does start, please reinstall jfx manually__ by entering on the commandline:
 
 sudo apt-get install openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
 
