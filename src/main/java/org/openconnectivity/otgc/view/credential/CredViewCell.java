@@ -22,6 +22,7 @@ package org.openconnectivity.otgc.view.credential;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.GridPane;
+import org.iotivity.OCCredUtil;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
 
 public class CredViewCell extends ListCell<OcCredential> {
@@ -71,9 +72,9 @@ public class CredViewCell extends ListCell<OcCredential> {
 
         credId.setText(String.valueOf(cred.getCredid()));
         credSubject.setText("UUID: " + cred.getSubjectuuid());
-        credType.setText(cred.getCredtype().toString());
-        if (cred.getCredusage() != null) {
-            credUsage.setText(cred.getCredusage().getValue());
+        credType.setText(cred.getCredtype());
+        if (cred.getCredusage() != null && !cred.getCredusage().isEmpty()) {
+            credUsage.setText(cred.getCredusage());
         }
         if (cred.getRoleid() != null) {
             credRole.setText("OcCredRole ID: " + cred.getRoleid().getRole() + ", OcCredRole Authority: " + cred.getRoleid().getAuthority());

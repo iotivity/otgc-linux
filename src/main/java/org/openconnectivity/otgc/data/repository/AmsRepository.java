@@ -24,7 +24,6 @@ import io.reactivex.Single;
 import org.apache.log4j.Logger;
 import org.iotivity.*;
 import org.openconnectivity.otgc.domain.model.resource.secure.acl.*;
-import org.openconnectivity.otgc.utils.constant.OcfResourceUri;
 import org.openconnectivity.otgc.utils.constant.OcfWildcard;
 
 import javax.inject.Inject;
@@ -41,64 +40,33 @@ public class AmsRepository {
     @Inject
     public AmsRepository(){}
 
-    public Single<OcAcl> getAcl(String endpoint, String deviceId) {
+    public Single<OcAcl> getAcl(String deviceId) {
         return  Single.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
-            OCEndpointUtil.setDi(ep, uuid);
 
-            OCResponseHandler handler = (OCClientResponse response) -> {
-                if (response.getCode().equals(OCStatus.OC_STATUS_OK)) {
-                    OcAcl acl = new OcAcl();
-                    acl.parseOCRepresentation(response.getPayload());
-                    emitter.onSuccess(acl);
+            OCObtAclHandler handler = (OCSecurityAcl acl) -> {
+                if (acl != null) {
+                    OcAcl aclRet = new OcAcl();
+                    aclRet.parseOCRepresentation(acl);
+                    emitter.onSuccess(aclRet);
+
+                    /* Freeing the ACL structure */
+                    OCObt.freeAcl(acl);
                 } else {
-                    LOG.debug("GET ACL error - Status code: " + response.getCode());
-                    emitter.onError(new Exception("GET ACL error - Status code: " + response.getCode()));
-                }
-            };
-
-            if (!OCMain.doGet(OcfResourceUri.ACL2_URI, ep, null, handler, OCQos.HIGH_QOS)) {
-                emitter.onError(new Exception("GET ACL error"));
-            }
-
-            OCEndpointUtil.freeEndpoint(ep);
-        });
-    }
-
-    private Completable provisionAcl(String endpoint, String deviceId, OcAcl acl) {
-        return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
-            OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
-            OCEndpointUtil.setDi(ep, uuid);
-
-            OCResponseHandler handler = (OCClientResponse response) -> {
-                OCStatus code = response.getCode();
-                if (code.equals(OCStatus.OC_STATUS_OK) || code.equals(OCStatus.OC_STATUS_CHANGED)) {
-                    LOG.debug("Provision ACL succeeded");
-                    emitter.onComplete();
-                } else {
-                    emitter.onError(new IOException("Provision ACE error"));
-                }
-            };
-
-            if (OCMain.initPost(OcfResourceUri.ACL2_URI, ep, null, handler, OCQos.LOW_QOS)) {
-                CborEncoder root = acl.parseToCbor();
-
-                if (OCMain.doPost()) {
-                    LOG.debug("Sent POST request to /oic/sec/acl2");
-                } else {
-                    String error = "Could not send POST request to /oic/sec/acl2";
-                    LOG.error(error);
+                    String error = "GET ACL error";
+                    LOG.debug(error);
                     emitter.onError(new Exception(error));
                 }
+            };
+
+            int ret = OCObt.retrieveAcl(uuid, handler);
+            if (ret >= 0) {
+                LOG.debug("Successfully issued request to RETRIEVE /oic/sec/acl2");
             } else {
-                String error = "Could not init POST request to /oic/sec/acl2";
+                String error = "ERROR issuing request to RETRIEVE /oic/sec/acl2";
                 LOG.error(error);
                 emitter.onError(new Exception(error));
             }
-
-            OCEndpointUtil.freeEndpoint(ep);
         });
     }
 
@@ -138,22 +106,6 @@ public class AmsRepository {
         });
     }
 
-    public Completable provisionUuidAcl(String endpoint, String deviceId, String subjectId, List<String> verticalResources, long permission) {
-        OcAceSubject subject = new OcAceSubject();
-        subject.setType(OcAceSubjectType.UUID_TYPE);
-        subject.setUuid(subjectId);
-        OcAce ace = new OcAce();
-        ace.setSubject(subject);
-        ace.setPermission(permission);
-        ace.setResources(getResources(verticalResources));
-        List<OcAce> aceList = new ArrayList<>();
-        aceList.add(ace);
-
-        OcAcl acl = new OcAcl();
-        acl.setAceList(aceList);
-        return provisionAcl(endpoint, deviceId, acl);
-    }
-
     public Completable provisionUuidAce(String deviceId, String subjectId, List<String> verticalResources, long permission) {
         OCUuid di = OCUuidUtil.stringToUuid(subjectId);
 
@@ -167,23 +119,6 @@ public class AmsRepository {
         return provisionAce(deviceId, ace, verticalResources, permission);
     }
 
-    public Completable provisionRoleAcl(String endpoint, String deviceId, String roleId, String roleAuthority, List<String> verticalResources, long permission) {
-        OcAceSubject subject = new OcAceSubject();
-        subject.setType(OcAceSubjectType.ROLE_TYPE);
-        subject.setRoleId(roleId);
-        subject.setAuthority(roleAuthority);
-        OcAce ace = new OcAce();
-        ace.setSubject(subject);
-        ace.setPermission(permission);
-        ace.setResources(getResources(verticalResources));
-        List<OcAce> aceList = new ArrayList<>();
-        aceList.add(ace);
-
-        OcAcl acl = new OcAcl();
-        acl.setAceList(aceList);
-        return provisionAcl(endpoint, deviceId, acl);
-    }
-
     public Completable provisionRoleAce(String deviceId, String roleId, String roleAuthority, List<String> verticalResources, long permission) {
         OCSecurityAce ace = OCObt.newAceForRole(roleId, roleAuthority);
         if (ace == null) {
@@ -193,22 +128,6 @@ public class AmsRepository {
         }
 
         return provisionAce(deviceId, ace, verticalResources, permission);
-    }
-
-    public Completable provisionConntypeAcl(String endpoint, String deviceId, boolean isAuthCrypt, List<String> verticalResources, long permission) {
-        OcAceSubject subject = new OcAceSubject();
-        subject.setType(OcAceSubjectType.CONN_TYPE);
-        subject.setConnType(isAuthCrypt ? "auth-crypt" : "anon-clear");
-        OcAce ace = new OcAce();
-        ace.setSubject(subject);
-        ace.setPermission(permission);
-        ace.setResources(getResources(verticalResources));
-        List<OcAce> aceList = new ArrayList<>();
-        aceList.add(ace);
-
-        OcAcl acl = new OcAcl();
-        acl.setAceList(aceList);
-        return provisionAcl(endpoint, deviceId, acl);
     }
 
     public Completable provisionConntypeAce(String deviceId, boolean isAuthCrypt, List<String> verticalResources, long permission) {
@@ -274,29 +193,27 @@ public class AmsRepository {
         });
     }
 
-    public Completable deleteAcl(String endpoint, String deviceId, long aceId) {
+    public Completable deleteAcl(String deviceId, long aceId) {
         return Completable.create(emitter -> {
-            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
             OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
-            OCEndpointUtil.setDi(ep, uuid);
 
-            OCResponseHandler handler = (OCClientResponse response) -> {
-                OCStatus code = response.getCode();
-                if (code.equals(OCStatus.OC_STATUS_OK) || code.equals(OCStatus.OC_STATUS_DELETED)) {
+            OCObtStatusHandler handler = (int status) -> {
+                if (status >= 0) {
                     LOG.debug("Delete ACE succeeded");
                     emitter.onComplete();
                 } else {
-                    emitter.onError(new IOException("Delete ACE error"));
+                    emitter.onError(new Exception("Delete ACE error"));
                 }
             };
 
-            if (!OCMain.doDelete(OcfResourceUri.ACL2_URI, ep, OcfResourceUri.DELETE_ACE_QUERY + aceId, handler, OCQos.HIGH_QOS)) {
+            int ret = OCObt.deleteAceByAceId(uuid, (int)aceId, handler);
+            if (ret >= 0) {
+                LOG.debug("Successfully issued request to DELETE /oic/sec/acl2 with aceid=" + aceId);
+            } else {
                 String error = "Could not send DELETE request to /oic/sec/acl2 with aceid=" + aceId;
                 LOG.error(error);
                 emitter.onError(new Exception(error));
             }
-
-            OCEndpointUtil.freeEndpoint(ep);
         });
     }
 

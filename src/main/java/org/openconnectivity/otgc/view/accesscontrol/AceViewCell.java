@@ -26,6 +26,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import org.iotivity.OCAceSubjectType;
 import org.openconnectivity.otgc.domain.model.resource.secure.acl.OcAce;
 import org.openconnectivity.otgc.domain.model.resource.secure.acl.OcAceResource;
 
@@ -111,23 +112,17 @@ public class AceViewCell extends ListCell<OcAce> {
         setText(null);
 
         aceId.setText(String.valueOf(ace.getAceid()));
-        switch (ace.getSubject().getType()) {
-            case UUID_TYPE:
-                subject.setText("UUID: " + ace.getSubject().getUuid());
-                break;
-            case ROLE_TYPE:
-                subject.setText("OcCredRole ID: " + ace.getSubject().getRoleId() +
-                                ", OcCredRole Authority: " + ace.getSubject().getAuthority());
-                break;
-            case CONN_TYPE:
-                if (ace.getSubject().getConnType().equals("anon-clear")) {
-                    subject.setText("Connection type: Anonymous");
-                } else if (ace.getSubject().getConnType().equals("auth-crypt")) {
-                    subject.setText("Connection type: Authenticated");
-                }
-                break;
-            default:
-                break;
+        if (OCAceSubjectType.valueOf(ace.getSubject().getType()) == OCAceSubjectType.OC_SUBJECT_UUID) {
+            subject.setText("UUID: " + ace.getSubject().getUuid());
+        } else if (OCAceSubjectType.valueOf(ace.getSubject().getType()) == OCAceSubjectType.OC_SUBJECT_ROLE) {
+            subject.setText("OcCredRole ID: " + ace.getSubject().getRoleId() +
+                    ", OcCredRole Authority: " + ace.getSubject().getAuthority());
+        } else if (OCAceSubjectType.valueOf(ace.getSubject().getType()) == OCAceSubjectType.OC_SUBJECT_CONN) {
+            if (ace.getSubject().getConnType().equals("anon-clear")) {
+                subject.setText("Connection type: Anonymous");
+            } else if (ace.getSubject().getConnType().equals("auth-crypt")) {
+                subject.setText("Connection type: Authenticated");
+            }
         }
         createCheck.selectedProperty().setValue((ace.getPermission() & 1) == 1);
         retrieveCheck.selectedProperty().setValue((ace.getPermission() & 2) == 2);

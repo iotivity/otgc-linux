@@ -19,16 +19,11 @@
 
 package org.openconnectivity.otgc.domain.model.resource.secure.cred;
 
-import com.upokecenter.cbor.CBORObject;
-import org.iotivity.CborEncoder;
-import org.iotivity.OCRep;
-import org.iotivity.OCRepresentation;
-import org.openconnectivity.otgc.utils.constant.OcfEncoding;
-import org.openconnectivity.otgc.utils.constant.OcfResourceAttributeKey;
+import org.iotivity.*;
 
 public class OcCredPublicData {
 
-    private OcfEncoding encoding;
+    private String encoding;
     private String pemData;
     private byte[] derData;
 
@@ -36,11 +31,11 @@ public class OcCredPublicData {
 
     }
 
-    public OcfEncoding getEncoding() {
+    public String getEncoding() {
         return encoding;
     }
 
-    public void setEncoding(OcfEncoding encoding) {
+    public void setEncoding(String encoding) {
         this.encoding = encoding;
     }
 
@@ -60,51 +55,12 @@ public class OcCredPublicData {
         this.derData = derData;
     }
 
-    public void parseCbor(CBORObject cbor) {
-        /* encoding */
-        CBORObject encodingObj = cbor.get(OcfResourceAttributeKey.ENCODING_KEY);
-        if (encodingObj != null) {
-            String encoding = encodingObj.AsString();
-            this.setEncoding(OcfEncoding.valueToEnum(encoding));
-        }
-        /* data */
-        CBORObject dataObj = cbor.get(OcfResourceAttributeKey.DATA_KEY);
-        if (dataObj != null) {
-            if (encodingObj.AsString().equals(OcfEncoding.OC_ENCODING_DER.getValue())) {
-                /* data DER format */
-                byte[] dataDer = dataObj.GetByteString();
-                this.setDerData(dataDer);
-            } else if (encodingObj.AsString().equals(OcfEncoding.OC_ENCODING_PEM.getValue())) {
-                /* data PEM format */
-                String dataPem = dataObj.AsString();
-                this.setPemData(dataPem);
-            }
-        }
-    }
-
-    public void parseOCRepresentation(OCRepresentation rep) {
-        /* data DER format */
-        byte[] dataDer = OCRep.getByteString(rep, OcfResourceAttributeKey.DATA_KEY);
-        this.setDerData(dataDer);
+    public void parseOCRepresentation(OCCredData data) {
         /* data PEM format */
-        String dataPem = OCRep.getString(rep, OcfResourceAttributeKey.DATA_KEY);
+        String dataPem = data.getData();
         this.setPemData(dataPem);
         /* encoding */
-        String encoding = OCRep.getString(rep, OcfResourceAttributeKey.ENCODING_KEY);
-        this.setEncoding(OcfEncoding.valueToEnum(encoding));
-    }
-
-    public void parseToCbor(CborEncoder parent) {
-        if (this.getEncoding() != null) {
-            OCRep.setTextString(parent, OcfResourceAttributeKey.ENCODING_KEY, this.getEncoding().getValue());
-        }
-
-        if (this.getPemData() != null && !this.getPemData().isEmpty()) {
-            OCRep.setTextString(parent, OcfResourceAttributeKey.DATA_KEY, this.getPemData());
-        }
-
-        if (this.getDerData() != null) {
-            OCRep.setByteString(parent, OcfResourceAttributeKey.DATA_KEY, this.getDerData());
-        }
+        String encoding = OCCredUtil.readEncoding(data.getEncoding());
+        this.setEncoding(encoding);
     }
 }

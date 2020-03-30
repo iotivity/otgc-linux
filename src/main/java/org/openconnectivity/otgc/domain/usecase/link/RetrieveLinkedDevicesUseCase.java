@@ -20,11 +20,10 @@
 package org.openconnectivity.otgc.domain.usecase.link;
 
 import io.reactivex.Single;
+import org.iotivity.OCCredType;
 import org.openconnectivity.otgc.data.repository.CmsRepository;
-import org.openconnectivity.otgc.data.repository.IotivityRepository;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
-import org.openconnectivity.otgc.utils.constant.OcfCredType;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -32,31 +31,27 @@ import java.util.List;
 
 public class RetrieveLinkedDevicesUseCase {
 
-    private final IotivityRepository iotivityRepository;
     private final CmsRepository cmsRepository;
 
     @Inject
-    public RetrieveLinkedDevicesUseCase(IotivityRepository iotivityRepository,
-            CmsRepository cmsRepository)
+    public RetrieveLinkedDevicesUseCase(CmsRepository cmsRepository)
     {
-        this.iotivityRepository = iotivityRepository;
         this.cmsRepository = cmsRepository;
     }
 
     public Single<List<String>> execute(Device device)
     {
-        return iotivityRepository.getSecureEndpoint(device)
-                .flatMap(endpoint -> cmsRepository.getCredentials(endpoint, device.getDeviceId()))
-                .map(ocCredentials -> {
-                    List<String> creds = new ArrayList<>();
-                    for (OcCredential cred : ocCredentials.getCredList()) {
-                        if (cred.getSubjectuuid() != null
-                                && cred.getCredtype() == OcfCredType.OC_CREDTYPE_PSK) {
-                            creds.add(cred.getSubjectuuid());
-                        }
+        return cmsRepository.getCredentials(device.getDeviceId())
+            .map(ocCredentials -> {
+                List<String> creds = new ArrayList<>();
+                for (OcCredential cred : ocCredentials.getCredList()) {
+                    if (cred.getSubjectuuid() != null
+                            && OCCredType.valueOf(cred.getCredtype()) == OCCredType.OC_CREDTYPE_PSK) {
+                        creds.add(cred.getSubjectuuid());
                     }
+                }
 
-                    return creds;
-                });
+                return creds;
+            });
     }
 }
