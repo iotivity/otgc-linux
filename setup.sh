@@ -2,7 +2,7 @@
 set -x #echo on
 # build setup script to be used with an curl command
 #
-OTGC_VERSION=2.9.0
+OTGC_VERSION=2.10.0
 
 #
 # system update
@@ -55,8 +55,9 @@ cd ..
 rm -rf iotivity-lite
 git clone https://github.com/iotivity/iotivity-lite.git
 cd iotivity-lite
-git checkout swig
-git checkout otgc_220
+#git checkout swig
+#git checkout otgc_220
+git checkout 2.1.1-RC1
 
 
 git apply --stat ../otgc-linux/extlibs/patchs/remove_cred_by_credid.patch
