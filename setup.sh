@@ -43,6 +43,7 @@ sudo apt-get -y install libopenjfx-jni=8u161-b12-1ubuntu2 --allow-downgrades
 rm -rf otgc-linux
 git clone https://github.com/openconnectivity/otgc-linux.git
 cd otgc-linux
+git checkout maintenance/v2.10.0
 
 
 mkdir lib
