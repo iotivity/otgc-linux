@@ -510,6 +510,7 @@ public class IotivityRepository {
                     OcEndpoint endpoint = new OcEndpoint();
                     endpoint.setEndpoint(OCEndpointUtil.toString(ep));
                     epList.add(endpoint);
+                    ep = ep.getNext();
                 }
                 resource.setEndpoints(epList);
                 resource.setPropertiesMask(resourcePropertiesMask);
