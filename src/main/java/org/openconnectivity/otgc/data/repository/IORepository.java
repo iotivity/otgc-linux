@@ -105,6 +105,20 @@ public class IORepository {
         });
     }
 
+    public Single<byte[]> getBytesFromPath(String path) {
+        return Single.fromCallable(() -> {
+            byte[] fileBytes;
+            try (InputStream inputStream = new FileInputStream(path)) {
+                int numBytes = inputStream.available() + 1;
+                fileBytes = new byte[numBytes];
+                inputStream.read(fileBytes);
+                fileBytes[numBytes - 1] = '\0';
+            }
+
+            return fileBytes;
+        });
+    }
+
     public Single<CBORObject> getAssetSvrAsCbor(String resource, long device) {
         return Single.create(emitter -> {
             try (FileInputStream stream = new FileInputStream(OtgcConstant.OTGC_CREDS_DIR + File.separator + resource + "_" + device)) {
