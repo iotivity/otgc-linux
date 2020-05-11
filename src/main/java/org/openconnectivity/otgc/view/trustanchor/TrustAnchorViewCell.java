@@ -21,6 +21,7 @@ package org.openconnectivity.otgc.view.trustanchor;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.layout.GridPane;
+import org.iotivity.OCCredUtil;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
 
 public class TrustAnchorViewCell extends ListCell<OcCredential> {
@@ -67,7 +68,7 @@ public class TrustAnchorViewCell extends ListCell<OcCredential> {
 
         credId.setText("Credential ID: " + String.valueOf(cred.getCredid()));
         credSubject.setText("UUID: " + cred.getSubjectuuid());
-        credSubject.setText("Usage: " + cred.getCredusage().getValue());
+        credSubject.setText("Usage: " + cred.getCredusage());
 
         setGraphic(gridPane);
     }

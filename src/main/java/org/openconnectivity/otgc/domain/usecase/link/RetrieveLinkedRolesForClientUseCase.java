@@ -20,7 +20,6 @@
 package org.openconnectivity.otgc.domain.usecase.link;
 
 import io.reactivex.Single;
-import org.openconnectivity.otgc.data.repository.IotivityRepository;
 import org.openconnectivity.otgc.data.repository.CmsRepository;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
@@ -30,31 +29,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RetrieveLinkedRolesForClientUseCase {
-    private final IotivityRepository iotivityRepository;
     private final CmsRepository cmsRepository;
 
     @Inject
-    public RetrieveLinkedRolesForClientUseCase(IotivityRepository iotivityRepository,
-                                               CmsRepository cmsRepository)
+    public RetrieveLinkedRolesForClientUseCase(CmsRepository cmsRepository)
     {
-        this.iotivityRepository = iotivityRepository;
         this.cmsRepository = cmsRepository;
     }
 
     public Single<List<String>> execute(Device device)
     {
-        return iotivityRepository.getSecureEndpoint(device)
-                .flatMap(endpoint -> cmsRepository.getCredentials(endpoint, device.getDeviceId()))
-                .map(credentials -> {
-                    List<String> roles = new ArrayList<>();
+        return cmsRepository.getCredentials(device.getDeviceId())
+            .map(credentials -> {
+                List<String> roles = new ArrayList<>();
 
-                    for (OcCredential cred : credentials.getCredList()) {
-                        if (cred.getRoleid() != null) {
-                            roles.add(cred.getRoleid().getRole());
-                        }
+                for (OcCredential cred : credentials.getCredList()) {
+                    if (cred.getRoleid() != null) {
+                        roles.add(cred.getRoleid().getRole());
                     }
+                }
 
-                    return roles;
-                });
+                return roles;
+            });
     }
 }

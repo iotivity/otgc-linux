@@ -21,25 +21,20 @@ package org.openconnectivity.otgc.domain.usecase.credential;
 
 import io.reactivex.Single;
 import org.openconnectivity.otgc.data.repository.CmsRepository;
-import org.openconnectivity.otgc.data.repository.IotivityRepository;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredentials;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 
 import javax.inject.Inject;
 
 public class RetrieveCredentialsUseCase {
-    private final IotivityRepository iotivityRepository;
     private final CmsRepository cmsRepository;
 
     @Inject
-    public RetrieveCredentialsUseCase(IotivityRepository iotivityRepository,
-                                      CmsRepository cmsRepository) {
-        this.iotivityRepository = iotivityRepository;
+    public RetrieveCredentialsUseCase(CmsRepository cmsRepository) {
         this.cmsRepository = cmsRepository;
     }
 
     public Single<OcCredentials> execute(Device targetDevice) {
-        return iotivityRepository.getSecureEndpoint(targetDevice)
-                .flatMap(endpoint -> cmsRepository.getCredentials(endpoint, targetDevice.getDeviceId()));
+        return cmsRepository.getCredentials(targetDevice.getDeviceId());
     }
 }

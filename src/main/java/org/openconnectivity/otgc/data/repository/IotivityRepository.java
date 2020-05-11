@@ -20,7 +20,6 @@
 package org.openconnectivity.otgc.data.repository;
 
 import io.reactivex.Completable;
-import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import org.apache.log4j.Logger;
@@ -488,7 +487,72 @@ public class IotivityRepository {
                 Thread.currentThread().interrupt();
                 LOG.error(ex.getMessage());
             }
+
+            // Free endpoint
+            OCEndpointUtil.freeEndpoint(ep);
         });
+    }
+
+    public Observable<OcResource> discoverAllResources(String deviceId) {
+        return Observable.create(emitter -> {
+            OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
+
+            OCDiscoveryAllHandler handler =
+                    (String anchor, String uri, String[] types, int interfaceMask, OCEndpoint endpoints,
+                     int resourcePropertiesMask, boolean more) -> {
+                OcResource resource = new OcResource();
+                resource.setAnchor(anchor);
+                resource.setHref(uri);
+
+                List<OcEndpoint> epList = new ArrayList<>();
+                OCEndpoint ep = endpoints;
+                while (ep != null) {
+                    OcEndpoint endpoint = new OcEndpoint();
+                    endpoint.setEndpoint(OCEndpointUtil.toString(ep));
+                    epList.add(endpoint);
+                    ep = ep.getNext();
+                }
+                resource.setEndpoints(epList);
+                resource.setPropertiesMask(resourcePropertiesMask);
+                resource.setResourceTypes(Arrays.asList(types));
+                emitter.onNext(resource);
+
+                if(!more) {
+                    emitter.onComplete();
+                    return OCDiscoveryFlags.OC_STOP_DISCOVERY;
+                }
+                return OCDiscoveryFlags.OC_CONTINUE_DISCOVERY;
+            };
+
+            int ret = OCObt.discoverAllResources(uuid, handler);
+            if (ret >= 0)
+            {
+                LOG.debug("Successfully issued resource discovery request");
+            } else {
+                String error = "ERROR issuing resource discovery request";
+                LOG.error(error);
+                emitter.onError(new Exception(error));
+            }
+        });
+    }
+
+    public Single<List<OcResource>> discoverVerticalResources(String deviceId) {
+        return discoverAllResources(deviceId)
+                .toList()
+                .map(resources -> {
+                    List<OcResource> resourceList = new ArrayList<>();
+                    for (OcResource resource : resources) {
+                        for (String resourceType : resource.getResourceTypes()) {
+                            if (OcfResourceType.isVerticalResourceType(resourceType)
+                                    && !resourceType.startsWith("oic.d.")) {
+                                resourceList.add(resource);
+                                break;
+                            }
+                        }
+                    }
+
+                    return resourceList;
+                });
     }
 
     public Single<OcRes> findResource(String host, String resourceType) {

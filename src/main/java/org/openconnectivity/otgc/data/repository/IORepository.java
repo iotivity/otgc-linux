@@ -95,8 +95,10 @@ public class IORepository {
         return Single.fromCallable(() -> {
             byte[] fileBytes;
             try (InputStream inputStream = new FileInputStream(OtgcConstant.DATA_PATH + path)) {
-                fileBytes = new byte[inputStream.available()];
+                int numBytes = inputStream.available() + 1;
+                fileBytes = new byte[numBytes];
                 inputStream.read(fileBytes);
+                fileBytes[numBytes - 1] = '\0';
             }
 
             return fileBytes;
