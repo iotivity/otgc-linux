@@ -26,16 +26,12 @@ import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
-import org.openconnectivity.otgc.domain.usecase.trustanchor.GetTrustAnchorUseCase;
-import org.openconnectivity.otgc.domain.usecase.trustanchor.RemoveTrustAnchorByCredidUseCase;
-import org.openconnectivity.otgc.domain.usecase.trustanchor.StoreTrustAnchorUseCase;
+import org.openconnectivity.otgc.domain.usecase.trustanchor.*;
 import org.openconnectivity.otgc.utils.rx.SchedulersFacade;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TrustAnchorViewModel implements ViewModel {
 
@@ -45,6 +41,8 @@ public class TrustAnchorViewModel implements ViewModel {
 
     // Use cases
     private final StoreTrustAnchorUseCase storeTrustAnchorUseCase;
+    private final SaveIntermediateCertificateUseCase saveIntermediateCertificateUseCase;
+    private final SaveEndEntityCertificateUseCase saveEndEntityCertificateUseCase;
     private final GetTrustAnchorUseCase getTrustAnchorUseCase;
     private final RemoveTrustAnchorByCredidUseCase remoteRemoveTrustAnchorByCredidUseCase;
 
@@ -53,24 +51,28 @@ public class TrustAnchorViewModel implements ViewModel {
     public ListProperty<OcCredential> trustAnchorListProperty() {
         return trustAnchorList;
     }
-    private final ObjectProperty<Response<Void>> storeTrustAnchorResponse = new SimpleObjectProperty<>();
+    private final ObjectProperty<Response<Void>> saveCertificateResponse = new SimpleObjectProperty<>();
 
     @Inject
     public TrustAnchorViewModel(SchedulersFacade schedulersFacade,
                                 StoreTrustAnchorUseCase storeTrustAnchorUseCase,
+                                SaveIntermediateCertificateUseCase saveIntermediateCertificateUseCase,
+                                SaveEndEntityCertificateUseCase saveEndEntityCertificateUseCase,
                                 GetTrustAnchorUseCase getTrustAnchorUseCase,
                                 RemoveTrustAnchorByCredidUseCase remoteRemoveTrustAnchorByCredidUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.storeTrustAnchorUseCase = storeTrustAnchorUseCase;
+        this.saveIntermediateCertificateUseCase = saveIntermediateCertificateUseCase;
+        this.saveEndEntityCertificateUseCase = saveEndEntityCertificateUseCase;
         this.getTrustAnchorUseCase = getTrustAnchorUseCase;
         this.remoteRemoveTrustAnchorByCredidUseCase = remoteRemoveTrustAnchorByCredidUseCase;
     }
 
-    public ObjectProperty<Response<Void>> storeTrustAnchorResponseProperty() {
-        return storeTrustAnchorResponse;
+    public ObjectProperty<Response<Void>> saveCertificateResponseProperty() {
+        return saveCertificateResponse;
     }
 
-    public void retrieveTrustAnchors() {
+    public void retrieveCertificates() {
         disposable.add(getTrustAnchorUseCase.execute()
             .subscribeOn(schedulersFacade.io())
             .observeOn(schedulersFacade.ui())
@@ -86,17 +88,37 @@ public class TrustAnchorViewModel implements ViewModel {
             .subscribeOn(schedulersFacade.io())
             .observeOn(schedulersFacade.ui())
             .subscribe(
-                    () -> retrieveTrustAnchors(),
-                    throwable -> storeTrustAnchorResponse.set(Response.error(throwable))
+                    () -> retrieveCertificates(),
+                    throwable -> saveCertificateResponse.set(Response.error(throwable))
             ));
     }
 
-    public void removeTrustAnchorByCredid(long credid) {
+    public void saveIntermediateCertificate(Integer credid, File file) {
+        disposable.add(saveIntermediateCertificateUseCase.execute(credid, file.getPath())
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe(
+                        () -> retrieveCertificates(),
+                        throwable -> saveCertificateResponse.set(Response.error(throwable))
+                ));
+    }
+
+    public void saveEndEntityCertificate(File certFile, File keyFile) {
+        disposable.add(saveEndEntityCertificateUseCase.execute(certFile.getPath(), keyFile.getPath())
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe(
+                        () -> retrieveCertificates(),
+                        throwable -> saveCertificateResponse.set(Response.error(throwable))
+                ));
+    }
+
+    public void removeCertificateByCredid(long credid) {
         disposable.add(remoteRemoveTrustAnchorByCredidUseCase.execute(credid)
             .subscribeOn(schedulersFacade.io())
             .observeOn(schedulersFacade.ui())
             .subscribe(
-                    () -> retrieveTrustAnchors(),
+                    () -> retrieveCertificates(),
                     throwable -> {}
             ));
     }

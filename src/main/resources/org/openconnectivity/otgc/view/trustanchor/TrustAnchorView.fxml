@@ -25,6 +25,8 @@
   -->
 
 <?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXRadioButton?>
+<?import com.jfoenix.controls.JFXComboBox?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="600.0"
       xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.openconnectivity.otgc.view.trustanchor.TrustAnchorView">
@@ -34,22 +36,49 @@
                 <GridPane AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0"
                           AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0">
                     <columnConstraints>
-                        <ColumnConstraints percentWidth="70.0" hgrow="ALWAYS" />
-                        <ColumnConstraints percentWidth="30.0" hgrow="ALWAYS" />
+                        <ColumnConstraints percentWidth="60.0" hgrow="ALWAYS" />
+                        <ColumnConstraints percentWidth="40.0" hgrow="ALWAYS" />
                     </columnConstraints>
                     <rowConstraints>
-                        <RowConstraints percentHeight="85.0" valignment="CENTER" vgrow="ALWAYS" />
-                        <RowConstraints percentHeight="15.0" valignment="CENTER" vgrow="ALWAYS" />
+                        <RowConstraints valignment="CENTER" vgrow="ALWAYS" />
                     </rowConstraints>
-                    <ListView fx:id="listView" GridPane.rowIndex="0" GridPane.columnSpan="2" />
-                    <HBox GridPane.rowIndex="1" GridPane.columnIndex="1" spacing="5.0">
-                        <JFXButton fx:id="infoCaButton" text="%trust_anchor.button.info"
-                                   onAction="#handleInfoCaButton" />
-                        <JFXButton fx:id="addCaButton" text="%trust_anchor.button.add"
-                                   onAction="#handleAddCaButton" />
-                        <JFXButton fx:id="removeCaButton" text="%trust_anchor.button.remove"
-                                   onAction="#handleRemoveCaButton" />
-                    </HBox>
+                    <ListView fx:id="listView" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                    <VBox GridPane.rowIndex="0" GridPane.columnIndex="1" spacing="20">
+                        <VBox alignment="CENTER_LEFT" spacing="7" VBox.vgrow="ALWAYS">
+                            <children>
+                                <Label text="%trustanchor.label.certificate" />
+                                <JFXRadioButton fx:id="rootRadioButton" onAction="#handleCertificateGroup" selected="true" text="%trustanchor.radiobutton.root">
+                                    <toggleGroup>
+                                        <ToggleGroup fx:id="toggleCertificateGroup" />
+                                    </toggleGroup>
+                                </JFXRadioButton>
+                                <JFXRadioButton fx:id="intermediateRadioButton" onAction="#handleCertificateGroup" selected="false" text="%trustanchor.radiobutton.intermediate" toggleGroup="$toggleCertificateGroup" />
+                                <JFXRadioButton fx:id="endentityRadioButton" onAction="#handleCertificateGroup" selected="false" text="%trustanchor.radiobutton.endentity" toggleGroup="$toggleCertificateGroup" />
+                            </children>
+                        </VBox>
+                        <VBox fx:id="selectEndEntityLayout" disable="true">
+                            <Label text="%trust_anchor.text.select_end_entity" />
+                            <JFXComboBox fx:id="selectEndEntityCertificate" />
+                        </VBox>
+                        <VBox fx:id="selectCertificateLayout">
+                            <JFXButton fx:id="selectCertificateButton" text="%trust_anchor.button.select_certificate"
+                                       onAction="#handleSelectCertificateButton" />
+                            <Label fx:id="selectCertificateText" />
+                        </VBox>
+                        <VBox fx:id="selectKeyLayout" disable="true">
+                            <JFXButton fx:id="selectKeyButton" text="%trust_anchor.button.select_key"
+                                       onAction="#handleSelectKeyButton" />
+                            <Label fx:id="selectKeyText" />
+                        </VBox>
+                        <HBox>
+                            <JFXButton fx:id="infoCertificateButton" text="%trust_anchor.button.info"
+                                       onAction="#handleInfoCertificateButton" />
+                            <JFXButton fx:id="saveCertificateButton" text="%trust_anchor.button.save"
+                                       onAction="#handleSaveCertificateButton" />
+                            <JFXButton fx:id="removeCertificateButton" text="%trust_anchor.button.remove"
+                                       onAction="#handleRemoveCertificateButton" />
+                        </HBox>
+                    </VBox>
                 </GridPane>
             </children>
         </AnchorPane>

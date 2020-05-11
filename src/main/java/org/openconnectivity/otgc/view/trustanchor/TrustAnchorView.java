@@ -19,16 +19,19 @@
 package org.openconnectivity.otgc.view.trustanchor;
 
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXRadioButton;
 import de.saxsys.mvvmfx.FxmlView;
 import de.saxsys.mvvmfx.InjectViewModel;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
@@ -56,31 +59,66 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
     private ResourceBundle resourceBundle;
 
     @FXML private ListView<OcCredential> listView;
-    @FXML private JFXButton infoCaButton;
-    @FXML private JFXButton removeCaButton;
+    @FXML private JFXRadioButton rootRadioButton;
+    @FXML private JFXRadioButton intermediateRadioButton;
+    @FXML private JFXRadioButton endentityRadioButton;
+    @FXML private VBox selectEndEntityLayout;
+    @FXML private JFXComboBox<OcCredential> selectEndEntityCertificate;
+    @FXML private JFXButton selectCertificateButton;
+    @FXML private Label selectCertificateText;
+    @FXML private VBox selectKeyLayout;
+    @FXML private JFXButton selectKeyButton;
+    @FXML private Label selectKeyText;
+    @FXML private JFXButton infoCertificateButton;
+    @FXML private JFXButton saveCertificateButton;
+    @FXML private JFXButton removeCertificateButton;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         this.resourceBundle = resourceBundle;
 
-        viewModel.retrieveTrustAnchors();
+        selectCertificateText.setText("No selected certificate");
+        selectKeyText.setText("No selected key");
+
+        viewModel.retrieveCertificates();
 
         listView.itemsProperty().bind(viewModel.trustAnchorListProperty());
         listView.setCellFactory(deviceListView -> new TrustAnchorViewCell());
 
-        viewModel.storeTrustAnchorResponseProperty().addListener(this::processStoreTrustAnchorResponse);
+        selectEndEntityCertificate.itemsProperty().bind(viewModel.trustAnchorListProperty());
+        selectEndEntityCertificate.setCellFactory(new Callback<ListView<OcCredential>, ListCell<OcCredential>>(){
+            @Override
+            public ListCell<OcCredential> call(ListView<OcCredential> p) {
+                final ListCell<OcCredential> cell = new ListCell<OcCredential>() {
+                    @Override
+                    protected void updateItem(OcCredential t, boolean bln) {
+                        super.updateItem(t, bln);
 
-        infoCaButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
+                        if (t != null){
+                            setText("ID: " + t.getCredid());
+                        } else {
+                            setText(null);
+                        }
+                    }
+
+                };
+                return cell;
+            }
+        });
+
+        viewModel.saveCertificateResponseProperty().addListener(this::processStoreTrustAnchorResponse);
+
+        infoCertificateButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
                                                 listView.getSelectionModel().getSelectedItem() == null,
                                                     listView.getSelectionModel().selectedItemProperty()));
 
-        removeCaButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
+        removeCertificateButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
                                                 listView.getSelectionModel().getSelectedItem() == null,
                                                     listView.getSelectionModel().selectedItemProperty()));
     }
 
     @FXML
-    public void handleInfoCaButton() {
+    public void handleInfoCertificateButton() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setResizable(true);
         alert.setTitle("Trust Anchor - Information");
@@ -91,11 +129,28 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
         } else if (listView.getSelectionModel().getSelectedItem().getPublicData().getPemData() != null) {
             String pem = listView.getSelectionModel().getSelectedItem().getPublicData().getPemData();
             String base64 = pem.replaceAll("\\s", "")
-                                .replaceAll("\\r\\n", "")
-                                .replace("-----BEGINCERTIFICATE-----", "")
-                                .replace("-----ENDCERTIFICATE-----", "");
-            byte[] der = Base64.decode(base64.getBytes());
-            alert.setContentText(showX509CertificateInformation(der));
+                        .replaceAll("\\r\\n", "")
+                        .replace("-----ENDCERTIFICATE-----", "")
+                        .replace("\\u0000", "");
+            String[] certList = base64.split("-----BEGINCERTIFICATE-----");
+            String res = "";
+            for (String cert : certList) {
+                if (!cert.isEmpty()) {
+                    byte[] byteArr = cert.getBytes();
+                    byte[] der = Base64.decode(byteArr);
+                    res += showX509CertificateInformation(der);
+                    res += "\n";
+                }
+            }
+            if (res.isEmpty()) {
+                alert.setContentText("No information to show");
+            }
+            TextArea area = new TextArea(res);
+            area.setWrapText(true);
+            area.setEditable(false);
+
+            alert.getDialogPane().setContent(area);
+            alert.setResizable(true);
         }
 
         alert.getDialogPane().setMinWidth(600.0);
@@ -131,9 +186,26 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
     }
 
     @FXML
-    public void handleAddCaButton() {
+    public void handleCertificateGroup() {
+        if (rootRadioButton.isSelected()) {
+            selectEndEntityLayout.setDisable(true);
+            selectKeyLayout.setDisable(true);
+        } else if (intermediateRadioButton.isSelected()) {
+            selectEndEntityLayout.setDisable(false);
+            selectKeyLayout.setDisable(true);
+        } else if (endentityRadioButton.isSelected()) {
+            selectEndEntityLayout.setDisable(true);
+            selectKeyLayout.setDisable(false);
+        }
+    }
+
+    private File selectedCertificateFile = null;
+    private File selectedKeyFile = null;
+
+    @FXML
+    public void handleSelectCertificateButton() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select a new Trust Anchor");
+        fileChooser.setTitle("Select a new certificate");
         fileChooser.setInitialDirectory(
                 new File(System.getProperty("user.home"))
         );
@@ -144,7 +216,26 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
         );
         File file = fileChooser.showOpenDialog(primaryStage);
         if (file != null) {
-            viewModel.addTrustAnchor(file);
+            selectedCertificateFile = file;
+            selectCertificateText.setText(selectedCertificateFile.getName());
+        }
+    }
+
+    @FXML
+    public void handleSelectKeyButton() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select a new key for the selected certificate");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("All files", "*.*"),
+                new FileChooser.ExtensionFilter("KEY", "*.key")
+        );
+        File file = fileChooser.showOpenDialog(primaryStage);
+        if (file != null) {
+            selectedKeyFile = file;
+            selectKeyText.setText(selectedKeyFile.getName());
         }
     }
 
@@ -159,7 +250,22 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
     }
 
     @FXML
-    public void handleRemoveCaButton() {
-        viewModel.removeTrustAnchorByCredid(listView.getSelectionModel().getSelectedItem().getCredid());
+    public void handleSaveCertificateButton() {
+        if (selectedCertificateFile != null) {
+            if (rootRadioButton.isSelected()) {
+                viewModel.addTrustAnchor(selectedCertificateFile);
+            } else if (intermediateRadioButton.isSelected()) {
+                if (selectEndEntityCertificate.getSelectionModel().getSelectedItem() != null) {
+                    viewModel.saveIntermediateCertificate(selectEndEntityCertificate.getSelectionModel().getSelectedItem().getCredid(), selectedCertificateFile);
+                }
+            } else if (endentityRadioButton.isSelected()) {
+                viewModel.saveEndEntityCertificate(selectedCertificateFile, selectedKeyFile);
+            }
+        }
+    }
+
+    @FXML
+    public void handleRemoveCertificateButton() {
+        viewModel.removeCertificateByCredid(listView.getSelectionModel().getSelectedItem().getCredid());
     }
 }

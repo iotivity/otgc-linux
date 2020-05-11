@@ -20,6 +20,10 @@
 package org.openconnectivity.otgc.domain.usecase;
 
 import io.reactivex.Completable;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import org.iotivity.OCFactoryPresetsHandler;
 import org.iotivity.OCObt;
 import org.iotivity.OCPki;
@@ -28,6 +32,9 @@ import org.openconnectivity.otgc.data.repository.*;
 import org.openconnectivity.otgc.utils.constant.OtgcMode;
 
 import javax.inject.Inject;
+import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.Optional;
 
 public class InitOicStackUseCase {
 
@@ -69,34 +76,74 @@ public class InitOicStackUseCase {
         }
     });
     private void factoryResetHandler(long device) throws Exception {
-        /* Kyrio end-entity cert */
-        byte[] kyrioEeCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
-        /* private key of Kyrio end-entity cert */
-        byte[] kyrioEeKey = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_KEY).blockingGet();
-        int credid = OCPki.addMfgCert(device, kyrioEeCertificate, kyrioEeKey);
-        if (credid == -1) {
-            throw new Exception("Add identity certificate error");
-        }
+        /* Current date */
+        Date date = new Date();
 
-        /* Kyrio intermediate cert */
-        byte[] kyrioSubcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
-        if (OCPki.addMfgIntermediateCert(device, credid, kyrioSubcaCertificate) == -1) {
-            throw new Exception("Add intermediate certificate error");
+        /* Kyrio end-entity cert */
+        X509Certificate eeCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
+        if (date.after(eeCert.getNotBefore()) && date.before(eeCert.getNotAfter())) {
+            byte[] kyrioEeCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
+            /* private key of Kyrio end-entity cert */
+            byte[] kyrioEeKey = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_KEY).blockingGet();
+            int credid = OCPki.addMfgCert(device, kyrioEeCertificate, kyrioEeKey);
+            if (credid == -1) {
+                throw new Exception("Add identity certificate error");
+            }
+
+            /* Kyrio intermediate cert */
+            X509Certificate subCaCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
+            if (date.after(subCaCert.getNotBefore()) && date.before(subCaCert.getNotAfter())) {
+                byte[] kyrioSubcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
+                if (OCPki.addMfgIntermediateCert(device, credid, kyrioSubcaCertificate) == -1) {
+                    throw new Exception("Add intermediate certificate error");
+                }
+            } else {
+                showPopupNotValidCertificate("Kyrio intermediate certificate is not valid.");
+            }
+        } else {
+            showPopupNotValidCertificate("Kyrio end entity certificate is not valid.");
         }
 
         /* Kyrio root cert */
-        byte[] kyrioRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
-        if (OCPki.addMfgTrustAnchor(device, kyrioRootcaCertificate) == -1) {
-            throw new Exception("Add root certificate error");
+        X509Certificate caCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
+        if (date.after(caCert.getNotBefore()) && date.before(caCert.getNotAfter())) {
+            byte[] kyrioRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
+            if (OCPki.addMfgTrustAnchor(device, kyrioRootcaCertificate) == -1) {
+                throw new Exception("Add root certificate error");
+            }
+        } else {
+            showPopupNotValidCertificate("Kyrio root certificate is not valid.");
         }
 
         /* EonTi root cert */
-        byte[] eontiRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.EONTI_ROOT_CERTIFICATE).blockingGet();
-        if (OCPki.addMfgTrustAnchor(device, eontiRootcaCertificate) == -1) {
-            throw new Exception("Add root certificate error");
+        caCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.EONTI_ROOT_CERTIFICATE).blockingGet();
+        if (date.after(caCert.getNotBefore()) && date.before(caCert.getNotAfter())) {
+            byte[] eontiRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.EONTI_ROOT_CERTIFICATE).blockingGet();
+            if (OCPki.addMfgTrustAnchor(device, eontiRootcaCertificate) == -1) {
+                throw new Exception("Add root certificate error");
+            }
+        } else {
+            showPopupNotValidCertificate("EonTi root certificate is not valid.");
         }
 
         OCObt.shutdown();
+    }
+
+    private void showPopupNotValidCertificate(String content) {
+        Platform.runLater(() -> {
+            ButtonType closeButton = new ButtonType("Close", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+            Alert alertDialog = new Alert(Alert.AlertType.WARNING);
+            alertDialog.setTitle("Not Valid Certificate");
+            alertDialog.setHeaderText(content);
+            alertDialog.getButtonTypes().clear();
+            alertDialog.getButtonTypes().add(closeButton);
+
+            Optional<ButtonType> result = alertDialog.showAndWait();
+            if (result.get() == closeButton) {
+                alertDialog.close();
+            }
+        });
     }
 
 }
