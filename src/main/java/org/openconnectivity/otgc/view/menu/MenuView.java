@@ -26,6 +26,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
+import org.openconnectivity.otgc.view.cloud.CloudView;
 import org.openconnectivity.otgc.viewmodel.MenuViewModel;
 import org.openconnectivity.otgc.view.about.AboutView;
 import org.openconnectivity.otgc.utils.util.DialogHelper;
@@ -73,5 +74,11 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
     public void about() {
         Parent view = FluentViewLoader.fxmlView(AboutView.class).load().getView();
         DialogHelper.showDialog(view, primaryStage, resourceBundle.getString("about.window.title"), "/styles/about.css");
+    }
+
+    @FXML
+    public void cloud() {
+        Parent view = FluentViewLoader.fxmlView(CloudView.class).load().getView();
+        DialogHelper.showDialog(view, primaryStage, resourceBundle.getString("cloud.window.title"), "/styles/cloud.css");
     }
 }
