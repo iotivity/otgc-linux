@@ -1,0 +1,11 @@
+.labelTitle {
+    -fx-font-weight: bold;
+}
+
+.labelTitle, .labelValue {
+    -fx-font-size: 14px;
+}
+
+#saveConfButton {
+    -jfx-button-type: RAISED;
+}
