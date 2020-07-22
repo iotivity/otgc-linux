@@ -40,6 +40,11 @@
                         <MenuItem mnemonicParsing="false" onAction="#close" text="%menu.file.close" />
                     </items>
                 </Menu>
+                <Menu mnemonicParsing="false" text="%menu.cloud">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#cloud" text="%menu.cloud.configuration" />
+                    </items>
+                </Menu>
                 <Menu mnemonicParsing="false" text="%menu.help">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#about" text="%menu.help.about" />

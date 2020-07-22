@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.*?>
+
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.geometry.Insets?>
+<!--
+  ~ Copyright 2018 DEKRA Testing and Certification, S.A.U. All Rights Reserved.
+  ~
+  ~ ******************************************************************
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~          http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  ~
+  -->
+
+<?import com.jfoenix.controls.JFXTextField?>
+<?import com.jfoenix.controls.JFXButton?>
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.openconnectivity.otgc.view.cloud.CloudView">
+    <children>
+        <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" alignment="CENTER">
+            <children>
+                <HBox spacing="10">
+                    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <Label styleClass="labelTitle" text="%cloud.label.status" />
+                    <Label fx:id="statusValue" id="statusValue" />
+                </HBox>
+                <VBox spacing="20">
+                    <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+                    <JFXTextField fx:id="authProviderTextField" labelFloat="true" promptText="%cloud.label.auth_provider" />
+                    <JFXTextField fx:id="cloudUrlTextField" labelFloat="true" promptText="%cloud.label.url" />
+                    <JFXTextField fx:id="accessTokenTextField" labelFloat="true" promptText="%cloud.label.access_token" />
+                    <JFXTextField fx:id="cloudUuidTextField" labelFloat="true" promptText="%cloud.label.uuid" />
+                    <JFXButton onAction="#handleSaveCloudConf" text="%cloud.button.save" buttonType="RAISED" />
+                </VBox>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
