@@ -133,12 +133,18 @@ To uninstall the aplication, use the next command:
 
     sudo dpkg -r otgc
   
-## script to build and install
-the following command executes all steps indicated above for building and installing on Linux (ubuntu 16)
-
+## Script to build and install
+The following command executes all steps indicated above for building and installing on Linux (ubuntu 18)
 
    curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
    
+note: __when the executable does start, please reinstall jfx manually__ by entering on the commandline:
+
+sudo apt-get install openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
+
+and start otgc on the command line: /usr/bin/otgc.sh
+
+ 
  
 For rasbian (stretch) use:
 
