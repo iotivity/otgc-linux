@@ -111,7 +111,8 @@ public class AccessControlViewModel implements ViewModel {
 
     public ObservableBooleanValue amsVisibleProperty() {
         return Bindings.createBooleanBinding(() -> deviceProperty.get() != null && deviceProperty.get().size() == 1
-                    && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED, deviceProperty);
+                    && (deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED
+                        && deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD), deviceProperty);
     }
 
     public ObjectProperty<Response<OcAcl>> retrieveAclResponseProperty() {
@@ -162,57 +163,61 @@ public class AccessControlViewModel implements ViewModel {
     }
 
     private void retrieveAcl(Device device) {
-        disposable.add(retrieveAclUseCase.execute(device)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> retrieveAclResponse.setValue(Response.loading()))
-                .subscribe(
-                        acl -> {
-                            retrieveAclResponse.setValue(Response.success(acl));
+        if (device.getDeviceType() != DeviceType.CLOUD) {
+            disposable.add(retrieveAclUseCase.execute(device)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> retrieveAclResponse.setValue(Response.loading()))
+                    .subscribe(
+                            acl -> {
+                                retrieveAclResponse.setValue(Response.success(acl));
 
-                            if (!device.hasACLpermit()
-                                    && (device.getDeviceType() == DeviceType.OWNED_BY_OTHER
-                                    || device.getDeviceType() == DeviceType.OWNED_BY_OTHER_WITH_PERMITS)) {
-                                disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
-                                                                                DeviceType.OWNED_BY_OTHER_WITH_PERMITS,
-                                                                                device.getPermits() | Device.ACL_PERMITS)
-                                                .subscribeOn(schedulersFacade.io())
-                                                .observeOn(schedulersFacade.ui())
-                                                .subscribe(
-                                                        () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
-                                                        throwable -> retrieveAclResponse.setValue(Response.error(throwable))
-                                                ));
-                            }
-                        },
-                        throwable -> {
-                            retrieveAclResponse.setValue(Response.error(throwable));
+                                if (!device.hasACLpermit()
+                                        && (device.getDeviceType() == DeviceType.OWNED_BY_OTHER
+                                        || device.getDeviceType() == DeviceType.OWNED_BY_OTHER_WITH_PERMITS)) {
+                                    disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
+                                            DeviceType.OWNED_BY_OTHER_WITH_PERMITS,
+                                            device.getPermits() | Device.ACL_PERMITS)
+                                            .subscribeOn(schedulersFacade.io())
+                                            .observeOn(schedulersFacade.ui())
+                                            .subscribe(
+                                                    () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
+                                                    throwable -> retrieveAclResponse.setValue(Response.error(throwable))
+                                            ));
+                                }
+                            },
+                            throwable -> {
+                                retrieveAclResponse.setValue(Response.error(throwable));
 
-                            if (device.hasACLpermit()) {
-                                disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
-                                        DeviceType.OWNED_BY_OTHER,
-                                        device.getPermits() & ~Device.ACL_PERMITS)
-                                        .subscribeOn(schedulersFacade.io())
-                                        .observeOn(schedulersFacade.ui())
-                                        .subscribe(
-                                                () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
-                                                throwable2 ->  retrieveAclResponse.setValue(Response.error(throwable))
-                                        ));
+                                if (device.hasACLpermit()) {
+                                    disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
+                                            DeviceType.OWNED_BY_OTHER,
+                                            device.getPermits() & ~Device.ACL_PERMITS)
+                                            .subscribeOn(schedulersFacade.io())
+                                            .observeOn(schedulersFacade.ui())
+                                            .subscribe(
+                                                    () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
+                                                    throwable2 -> retrieveAclResponse.setValue(Response.error(throwable))
+                                            ));
+                                }
                             }
-                        }
-                )
-        );
+                    )
+            );
+        }
     }
 
     private void retrieveVerticalResources(Device device) {
-        disposable.add(retrieveVerticalResourcesUseCase.execute(device)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> retrieveAclResponse.setValue(Response.loading()))
-                .subscribe(
-                        verticalResources -> retrieveVerticalResourcesResponse.setValue(Response.success(verticalResources)),
-                        throwable -> retrieveVerticalResourcesResponse.setValue(Response.error(throwable))
-                )
-        );
+        if (device.getDeviceType() != DeviceType.CLOUD) {
+            disposable.add(retrieveVerticalResourcesUseCase.execute(device)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> retrieveAclResponse.setValue(Response.loading()))
+                    .subscribe(
+                            verticalResources -> retrieveVerticalResourcesResponse.setValue(Response.success(verticalResources)),
+                            throwable -> retrieveVerticalResourcesResponse.setValue(Response.error(throwable))
+                    )
+            );
+        }
     }
 
     public void addVerticalResourcesToList(List<String> verticalResources) {

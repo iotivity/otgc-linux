@@ -128,36 +128,37 @@ public class CloudViewModel implements ViewModel {
     }
 
     public void updateValueStatus(int status) {
-        // Set value of status
-        switch(status) {
-            case OCCloudStatusMask.OC_CLOUD_INITIALIZED:
-                statusProperty.setValue("Initialized");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_REGISTERED:
-                statusProperty.setValue("Registered");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_LOGGED_IN:
-                statusProperty.setValue("Logged in");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_TOKEN_EXPIRY:
-                statusProperty.setValue("Token expiry");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_REFRESHED_TOKEN:
-                statusProperty.setValue("Refresh token");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_LOGGED_OUT:
-                statusProperty.setValue("Logged out");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_FAILURE:
-                statusProperty.setValue("Failure");
-                break;
-            case OCCloudStatusMask.OC_CLOUD_DEREGISTERED:
-                statusProperty.setValue("Deregistered");
-                break;
-            default:
-                statusProperty.setValue("Unknown");
-                break;
+        String value = "";
+        if (status == OCCloudStatusMask.OC_CLOUD_INITIALIZED) {
+            value += "Initialized";
         }
+        if ((status & OCCloudStatusMask.OC_CLOUD_REGISTERED) == OCCloudStatusMask.OC_CLOUD_REGISTERED) {
+            value += "Registered";
+        }
+        if ((status & OCCloudStatusMask.OC_CLOUD_LOGGED_IN) == OCCloudStatusMask.OC_CLOUD_LOGGED_IN) {
+            value += ", logged in";
+        }
+        if ((status & OCCloudStatusMask.OC_CLOUD_TOKEN_EXPIRY) == OCCloudStatusMask.OC_CLOUD_TOKEN_EXPIRY) {
+            value += ", token expiry";
+        }
+        if ((status & OCCloudStatusMask.OC_CLOUD_REFRESHED_TOKEN) == OCCloudStatusMask.OC_CLOUD_REFRESHED_TOKEN) {
+            value += ", refresh token";
+        }
+        if ((status & OCCloudStatusMask.OC_CLOUD_LOGGED_OUT) == OCCloudStatusMask.OC_CLOUD_LOGGED_OUT) {
+            value += ", logged out";
+        }
+        if ((status & OCCloudStatusMask.OC_CLOUD_FAILURE) == OCCloudStatusMask.OC_CLOUD_FAILURE) {
+            value += ", failure";
+        }
+        if ((status & OCCloudStatusMask.OC_CLOUD_DEREGISTERED) == OCCloudStatusMask.OC_CLOUD_DEREGISTERED) {
+            value += "Deregistered";
+        }
+
+        if (value.isEmpty()) {
+            value = "Unknown";
+        }
+
+        statusProperty.setValue(value);
     }
 
     public void provisionCloudConfiguration(String authProvider, String cloudUrl, String accessToken, String cloudUuid) {

@@ -52,6 +52,10 @@
     -fx-background-color: #78777a;
 }
 
+.ocf_purple {
+    -fx-background-color: #8e44ad;
+}
+
 /**
 * Toast
 */

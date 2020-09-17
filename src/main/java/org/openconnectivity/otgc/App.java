@@ -33,6 +33,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
+import org.iotivity.OCCloud;
+import org.iotivity.OCCloudContext;
 import org.iotivity.OCMain;
 import org.openconnectivity.otgc.data.persistence.DatabaseManager;
 import org.openconnectivity.otgc.data.repository.SettingRepository;
@@ -185,6 +187,11 @@ public class App extends MvvmfxGuiceApplication {
 
         notificationCenter.subscribe(NotificationKey.CANCEL_ALL_OBSERVERS,
                 (key, payload) -> {
+                    OCCloudContext ctx = OCCloud.getContext(0);
+                    if (ctx != null) {
+                        OCCloud.managerStop(ctx);
+                    }
+
                     OCMain.mainShutdown();
 
                     DatabaseManager.closeEntityManager();

@@ -11,7 +11,7 @@
 
 # Constants
 PROJECT_NAME="otgc"
-VERSION="2.13.0"
+VERSION="3.0.0"
 
 program=$0
 
