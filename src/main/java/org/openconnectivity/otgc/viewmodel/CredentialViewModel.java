@@ -102,7 +102,8 @@ public class CredentialViewModel implements ViewModel {
 
     public ObservableBooleanValue cmsVisibleProperty() {
         return Bindings.createBooleanBinding(() -> deviceProperty.get() != null && deviceProperty.get().size() == 1
-                && (deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED), deviceProperty);
+                && (deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED
+                    && deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD), deviceProperty);
     }
 
     public ObjectProperty<Response<Boolean>> createCredResponseProperty() {
@@ -138,45 +139,47 @@ public class CredentialViewModel implements ViewModel {
     }
 
     public void retrieveCreds(Device device) {
-        disposable.add(retrieveCredentialsUseCase.execute(device)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> retrieveCredsResponse.setValue(Response.loading()))
-                .subscribe(
-                        credentials -> {
-                            retrieveCredsResponse.setValue(Response.success(credentials));
+        if (device.getDeviceType() != DeviceType.CLOUD) {
+            disposable.add(retrieveCredentialsUseCase.execute(device)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> retrieveCredsResponse.setValue(Response.loading()))
+                    .subscribe(
+                            credentials -> {
+                                retrieveCredsResponse.setValue(Response.success(credentials));
 
-                            if (!device.hasCREDpermit()
-                                    && (device.getDeviceType() == DeviceType.OWNED_BY_OTHER
-                                    || device.getDeviceType() == DeviceType.OWNED_BY_OTHER_WITH_PERMITS)) {
-                                disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
-                                        DeviceType.OWNED_BY_OTHER_WITH_PERMITS,
-                                        device.getPermits() | Device.CRED_PERMITS)
-                                        .subscribeOn(schedulersFacade.io())
-                                        .observeOn(schedulersFacade.ui())
-                                        .subscribe(
-                                                () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
-                                                throwable -> retrieveCredsResponse.setValue(Response.error(throwable))
-                                        ));
-                            }
-                        },
-                        throwable -> {
-                            retrieveCredsResponse.setValue(Response.error(throwable));
+                                if (!device.hasCREDpermit()
+                                        && (device.getDeviceType() == DeviceType.OWNED_BY_OTHER
+                                        || device.getDeviceType() == DeviceType.OWNED_BY_OTHER_WITH_PERMITS)) {
+                                    disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
+                                            DeviceType.OWNED_BY_OTHER_WITH_PERMITS,
+                                            device.getPermits() | Device.CRED_PERMITS)
+                                            .subscribeOn(schedulersFacade.io())
+                                            .observeOn(schedulersFacade.ui())
+                                            .subscribe(
+                                                    () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
+                                                    throwable -> retrieveCredsResponse.setValue(Response.error(throwable))
+                                            ));
+                                }
+                            },
+                            throwable -> {
+                                retrieveCredsResponse.setValue(Response.error(throwable));
 
-                            if (device.hasCREDpermit()) {
-                                disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
-                                        DeviceType.OWNED_BY_OTHER,
-                                        device.getPermits() & ~Device.CRED_PERMITS)
-                                        .subscribeOn(schedulersFacade.io())
-                                        .observeOn(schedulersFacade.ui())
-                                        .subscribe(
-                                                () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
-                                                throwable2 -> retrieveCredsResponse.setValue(Response.error(throwable))
-                                        ));
+                                if (device.hasCREDpermit()) {
+                                    disposable.add(updateDeviceTypeUseCase.execute(device.getDeviceId(),
+                                            DeviceType.OWNED_BY_OTHER,
+                                            device.getPermits() & ~Device.CRED_PERMITS)
+                                            .subscribeOn(schedulersFacade.io())
+                                            .observeOn(schedulersFacade.ui())
+                                            .subscribe(
+                                                    () -> deviceListToolbarDetailScope.publish(NotificationKey.UPDATE_DEVICE_TYPE, device),
+                                                    throwable2 -> retrieveCredsResponse.setValue(Response.error(throwable))
+                                            ));
+                                }
                             }
-                        }
-                )
-        );
+                    )
+            );
+        }
     }
 
     public void setCred(OcCredentials credential) {

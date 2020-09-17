@@ -40,9 +40,12 @@
                         <MenuItem mnemonicParsing="false" onAction="#close" text="%menu.file.close" />
                     </items>
                 </Menu>
-                <Menu mnemonicParsing="false" text="%menu.cloud">
+                <Menu fx:id="cloud" mnemonicParsing="false" text="%menu.cloud">
                     <items>
-                        <MenuItem mnemonicParsing="false" onAction="#cloud" text="%menu.cloud.configuration" />
+                        <MenuItem mnemonicParsing="false" onAction="#cloudConfiguration" text="%menu.cloud.configuration" />
+                        <MenuItem fx:id="cloudRegister" mnemonicParsing="false" />
+                        <MenuItem fx:id="cloudLogged" mnemonicParsing="false" />
+                        <MenuItem fx:id="cloudRefreshToken" mnemonicParsing="false" text="%menu.cloud.refresh_token" onAction="#cloudRefreshToken"/>
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="%menu.help">

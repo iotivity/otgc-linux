@@ -38,9 +38,13 @@ public class Device implements Comparable<Device> {
     private String deviceId;
     private transient OcDeviceInfo deviceInfo;
     private String ipv6SecureHost;
+    private String ipv6TcpSecureHost;
     private String ipv6Host;
+    private String ipv6TcpHost;
     private String ipv4SecureHost;
+    private String ipv4TcpSecureHost;
     private String ipv4Host;
+    private String ipv4TcpHost;
     private int permits;
 
     public Device() {}
@@ -55,14 +59,26 @@ public class Device implements Comparable<Device> {
         while(endpoints != null) {
             String endpointStr = OCEndpointUtil.toString(endpoints);
 
-            if (endpointStr.startsWith("coaps://") && endpointStr.contains(".")) {
-                ipv4SecureHost = endpointStr;
-            } else if (endpointStr.startsWith("coaps://")) {
-                ipv6SecureHost = endpointStr;
-            } else if (endpointStr.startsWith("coap://") && endpointStr.contains(".")) {
-                ipv4Host = endpointStr;
-            } else if (endpointStr.startsWith("coap://")){
-                ipv6Host = endpointStr;
+            if (endpointStr.contains(".")) {
+                if (endpointStr.startsWith("coaps://")) {
+                    ipv4SecureHost = endpointStr;
+                } else if (endpointStr.startsWith("coaps+tcp://")) {
+                    ipv4TcpSecureHost = endpointStr;
+                } else if (endpointStr.startsWith("coap://")) {
+                    ipv4Host = endpointStr;
+                } else if (endpointStr.startsWith("coap+tcp://")) {
+                    ipv4TcpHost = endpointStr;
+                }
+            } else {
+                if (endpointStr.startsWith("coaps://")) {
+                    ipv6SecureHost = endpointStr;
+                } else if (endpointStr.startsWith("coaps+tcp://")) {
+                    ipv6TcpSecureHost = endpointStr;
+                } else if (endpointStr.startsWith("coap://")) {
+                    ipv6Host = endpointStr;
+                } else if (endpointStr.startsWith("coap+tcp://")) {
+                    ipv6TcpHost = endpointStr;
+                }
             }
 
             endpoints = endpoints.getNext();
@@ -77,14 +93,26 @@ public class Device implements Comparable<Device> {
         this.permits = permits;
 
         for (String endpoint : endpoints) {
-            if (endpoint.startsWith("coaps://") && endpoint.contains(".")) {
-                ipv4SecureHost = endpoint;
-            } else if (endpoint.startsWith("coaps://")) {
-                ipv6SecureHost = endpoint;
-            } else if (endpoint.startsWith("coap://") && endpoint.contains(".")) {
-                ipv4Host = endpoint;
-            } else if (endpoint.startsWith("coap://")) {
-                ipv6Host = endpoint;
+            if (endpoint.contains(".")) {
+                if (endpoint.startsWith("coaps://")) {
+                    ipv4SecureHost = endpoint;
+                } else if (endpoint.startsWith("coaps+tcp://")) {
+                    ipv4TcpSecureHost = endpoint;
+                } else if (endpoint.startsWith("coap://")) {
+                    ipv4Host = endpoint;
+                } else if (endpoint.startsWith("coap+tcp://")) {
+                    ipv4TcpHost = endpoint;
+                }
+            } else {
+                if (endpoint.startsWith("coaps://")) {
+                    ipv6SecureHost = endpoint;
+                } else if (endpoint.startsWith("coaps+tcp://")) {
+                    ipv6TcpSecureHost = endpoint;
+                } else if (endpoint.startsWith("coap://")) {
+                    ipv6Host = endpoint;
+                } else if (endpoint.startsWith("coap+tcp://")) {
+                    ipv6TcpHost = endpoint;
+                }
             }
         }
     }
@@ -129,12 +157,28 @@ public class Device implements Comparable<Device> {
         this.ipv6Host = host;
     }
 
+    public String getIpv6TcpHost() {
+        return this.ipv6TcpHost;
+    }
+
+    public void setIpv6TcpHost(String host) {
+        this.ipv6TcpHost = host;
+    }
+
     public String getIpv6SecureHost() {
         return this.ipv6SecureHost;
     }
 
     public void setIpv6SecureHost(String host) {
         this.ipv6SecureHost = host;
+    }
+
+    public String getIpv6TcpSecureHost() {
+        return this.ipv6TcpSecureHost;
+    }
+
+    public void setIpv6TcpSecureHost(String host) {
+        this.ipv6TcpSecureHost = host;
     }
 
     public String getIpv4Host() {
@@ -145,11 +189,27 @@ public class Device implements Comparable<Device> {
         this.ipv4Host = host;
     }
 
+    public String getIpv4TcpHost() {
+        return this.ipv4TcpHost;
+    }
+
+    public void setIpv4TcpHost(String host) {
+        this.ipv4TcpHost = host;
+    }
+
     public String getIpv4SecureHost() {
         return this.ipv4SecureHost;
     }
 
     public void setIpv4SecureHost(String host) {
+        this.ipv4SecureHost = host;
+    }
+
+    public String getIpv4TcpSecureHost() {
+        return this.ipv4SecureHost;
+    }
+
+    public void setIpv4TcpSecureHost(String host) {
         this.ipv4SecureHost = host;
     }
 
@@ -159,8 +219,18 @@ public class Device implements Comparable<Device> {
             return false;
         }
 
+        if (this.getIpv6TcpHost() != null && device.getIpv6TcpHost() != null
+                && !this.getIpv6TcpHost().equals(device.getIpv6TcpHost())) {
+            return false;
+        }
+
         if (this.getIpv6SecureHost() != null && device.getIpv6SecureHost() != null
                 && !this.getIpv6SecureHost().equals(device.getIpv6SecureHost())) {
+            return false;
+        }
+
+        if (this.getIpv6TcpSecureHost() != null && device.getIpv6TcpSecureHost() != null
+                && !this.getIpv6TcpSecureHost().equals(device.getIpv6TcpSecureHost())) {
             return false;
         }
 
@@ -169,8 +239,18 @@ public class Device implements Comparable<Device> {
             return false;
         }
 
+        if (this.getIpv4TcpHost() != null && device.getIpv4TcpHost() != null
+                && !this.getIpv4TcpHost().equals(device.getIpv4TcpHost())) {
+            return false;
+        }
+
         if (this.getIpv4SecureHost() != null && device.getIpv4SecureHost() != null
                 && !this.getIpv4SecureHost().equals(device.getIpv4SecureHost())) {
+            return false;
+        }
+
+        if (this.getIpv4TcpSecureHost() != null && device.getIpv4TcpSecureHost() != null
+                && !this.getIpv4TcpSecureHost().equals(device.getIpv4TcpSecureHost())) {
             return false;
         }
 

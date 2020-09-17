@@ -22,10 +22,14 @@ package org.openconnectivity.otgc.viewmodel;
 import de.saxsys.mvvmfx.InjectScope;
 import de.saxsys.mvvmfx.ViewModel;
 import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
+import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import org.openconnectivity.otgc.domain.usecase.*;
+import org.openconnectivity.otgc.domain.usecase.cloud.CloudDiscoverDevicesUseCase;
+import org.openconnectivity.otgc.domain.usecase.cloud.CloudRetrieveDeviceInfoUseCase;
+import org.openconnectivity.otgc.domain.usecase.cloud.CloudRetrieveDeviceRoleUseCase;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.utils.rx.SchedulersFacade;
@@ -38,6 +42,7 @@ import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class DeviceListViewModel implements ViewModel {
@@ -49,6 +54,9 @@ public class DeviceListViewModel implements ViewModel {
     private final GetDeviceNameUseCase getDeviceNameUseCase;
     private final GetDeviceRoleUseCase getDeviceRoleUseCase;
     private final GetDeviceDatabaseUseCase getDeviceDatabaseUseCase;
+    private final CloudDiscoverDevicesUseCase cloudDiscoverDevicesUseCase;
+    private final CloudRetrieveDeviceInfoUseCase cloudRetrieveDeviceInfoUseCase;
+    private final CloudRetrieveDeviceRoleUseCase cloudRetrieveDeviceRoleUseCase;
 
     private final CompositeDisposable disposables = new CompositeDisposable();
 
@@ -102,13 +110,19 @@ public class DeviceListViewModel implements ViewModel {
                                GetDeviceInfoUseCase getDeviceInfoUseCase,
                                GetDeviceNameUseCase getDeviceNameUseCase,
                                GetDeviceRoleUseCase getDeviceRoleUseCase,
-                               GetDeviceDatabaseUseCase getDeviceDatabaseUseCase) {
+                               GetDeviceDatabaseUseCase getDeviceDatabaseUseCase,
+                               CloudDiscoverDevicesUseCase cloudDiscoverDevicesUseCase,
+                               CloudRetrieveDeviceInfoUseCase cloudRetrieveDeviceInfoUseCase,
+                               CloudRetrieveDeviceRoleUseCase cloudRetrieveDeviceRoleUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.scanDevicesUseCase = scanDevicesUseCase;
         this.getDeviceInfoUseCase = getDeviceInfoUseCase;
         this.getDeviceNameUseCase = getDeviceNameUseCase;
         this.getDeviceRoleUseCase = getDeviceRoleUseCase;
         this.getDeviceDatabaseUseCase = getDeviceDatabaseUseCase;
+        this.cloudDiscoverDevicesUseCase = cloudDiscoverDevicesUseCase;
+        this.cloudRetrieveDeviceInfoUseCase = cloudRetrieveDeviceInfoUseCase;
+        this.cloudRetrieveDeviceRoleUseCase = cloudRetrieveDeviceRoleUseCase;
     }
 
     public ObjectProperty<Response<Device>> scanResponseProperty() {
@@ -143,7 +157,7 @@ public class DeviceListViewModel implements ViewModel {
     public void onDiscoverRequest() {
         devicesList.clear();
 
-        disposables.add(scanDevicesUseCase.execute()
+        Observable<Device> localScan = scanDevicesUseCase.execute()
                 .map(device -> {
                     device.setDeviceInfo(getDeviceInfoUseCase.execute(device).blockingGet());
                     return device;
@@ -160,7 +174,20 @@ public class DeviceListViewModel implements ViewModel {
                         }
                     }
                     return device;
+                });
+
+        Observable<Device> cloudScan = cloudDiscoverDevicesUseCase.execute()
+                .delay(5, TimeUnit.SECONDS)
+                .map(device -> {
+                    device.setDeviceInfo(cloudRetrieveDeviceInfoUseCase.execute(device).blockingGet());
+                    return device;
                 })
+                .map(device -> {
+                    device.setDeviceRole(cloudRetrieveDeviceRoleUseCase.execute(device).blockingGet());
+                    return device;
+                });
+
+        disposables.add(Observable.concat(localScan, cloudScan)
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> scanResponse.setValue(Response.loading()))

@@ -24,6 +24,8 @@ import de.saxsys.mvvmfx.InjectScope;
 import de.saxsys.mvvmfx.SceneLifecycle;
 import de.saxsys.mvvmfx.ViewModel;
 import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
+import io.reactivex.Completable;
+import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
@@ -35,6 +37,7 @@ import org.openconnectivity.otgc.domain.model.client.DynamicUiElement;
 import org.openconnectivity.otgc.domain.model.client.SerializableResource;
 import org.openconnectivity.otgc.domain.model.client.Info;
 import org.openconnectivity.otgc.domain.model.resource.virtual.p.OcPlatformInfo;
+import org.openconnectivity.otgc.domain.usecase.cloud.*;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.utils.constant.OcfInterface;
 import org.openconnectivity.otgc.domain.model.resource.virtual.d.OcDeviceInfo;
@@ -77,6 +80,11 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     private final CancelObserveResourceUseCase cancelObserveResourceUseCase;
     private final CancelAllObserveResourceUseCase cancelAllObserveResourceUseCase;
     private final UpdateDeviceTypeUseCase updateDeviceTypeUseCase;
+    private final CloudRetrieveDeviceInfoUseCase cloudRetrieveDeviceInfoUseCase;
+    private final CloudRetrievePlatformInfoUseCase cloudRetrievePlatformInfoUseCase;
+    private final CloudDiscoverResourcesUseCase cloudDiscoverResourcesUseCase;
+    private final CloudGetResourceUseCase cloudGetResourceUseCase;
+    private final CloudPostResourceUseCase cloudPostResourceUseCase;
 
     // Observable responses
     private final ObjectProperty<Response<OcDeviceInfo>> deviceInfoResponse = new SimpleObjectProperty<>();
@@ -88,9 +96,14 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     private final ObjectProperty<Response<SerializableResource>> observeResourceResponse = new SimpleObjectProperty<>();
 
     private ListProperty<Info> infoList = new SimpleListProperty<>();
-    public ListProperty<Info> infoListProperty() { return infoList; }
+
+    public ListProperty<Info> infoListProperty() {
+        return infoList;
+    }
+
     private final StringProperty selectedTab = new SimpleStringProperty();
-    public final StringProperty selectedTabProperty(){
+
+    public final StringProperty selectedTabProperty() {
         return this.selectedTab;
     }
 
@@ -106,7 +119,12 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
                            ObserveResourceUseCase observeResourceUseCase,
                            CancelObserveResourceUseCase cancelObserveResourceUseCase,
                            CancelAllObserveResourceUseCase cancelAllObserveResourceUseCase,
-                           UpdateDeviceTypeUseCase updateDeviceTypeUseCase) {
+                           UpdateDeviceTypeUseCase updateDeviceTypeUseCase,
+                           CloudRetrieveDeviceInfoUseCase cloudRetrieveDeviceInfoUseCase,
+                           CloudRetrievePlatformInfoUseCase cloudRetrievePlatformInfoUseCase,
+                           CloudDiscoverResourcesUseCase cloudDiscoverResourcesUseCase,
+                           CloudGetResourceUseCase cloudGetResourceUseCase,
+                           CloudPostResourceUseCase cloudPostResourceUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.getDeviceInfoUseCase = getDeviceInfoUseCase;
         this.getPlatformInfoUseCase = getPlatformInfoUseCase;
@@ -119,6 +137,11 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
         this.cancelObserveResourceUseCase = cancelObserveResourceUseCase;
         this.cancelAllObserveResourceUseCase = cancelAllObserveResourceUseCase;
         this.updateDeviceTypeUseCase = updateDeviceTypeUseCase;
+        this.cloudRetrieveDeviceInfoUseCase = cloudRetrieveDeviceInfoUseCase;
+        this.cloudRetrievePlatformInfoUseCase = cloudRetrievePlatformInfoUseCase;
+        this.cloudDiscoverResourcesUseCase = cloudDiscoverResourcesUseCase;
+        this.cloudGetResourceUseCase = cloudGetResourceUseCase;
+        this.cloudPostResourceUseCase = cloudPostResourceUseCase;
     }
 
     public void initialize() {
@@ -133,7 +156,8 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     }
 
     @Override
-    public void onViewAdded() {}
+    public void onViewAdded() {
+    }
 
     @Override
     public void onViewRemoved() {
@@ -188,21 +212,29 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
             // Load Info
             loadDeviceInfo(newValue.get(0));
             loadPlatformInfo(newValue.get(0));
-            if (selectedTabProperty().get() != null  && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.generic_client"))) {
-                introspect(newValue.get(0));
+            if (selectedTabProperty().get() != null && selectedTabProperty().get().equals(resourceBundle.getString("client.tab.generic_client"))) {
+                if (newValue.get(0).getDeviceType() != DeviceType.CLOUD) {
+                    introspect(newValue.get(0));
+                } else {
+                    findResources();
+                }
             }
         }
     }
 
     public void loadGenericClient(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-        if (newValue != null  && newValue.equals(resourceBundle.getString("client.tab.generic_client")) && deviceProperty.get() != null
-                && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED){
+        if (newValue != null && newValue.equals(resourceBundle.getString("client.tab.generic_client")) && deviceProperty.get() != null
+                && deviceProperty.get().size() == 1 && deviceProperty.get().get(0).getDeviceType() != DeviceType.UNOWNED) {
             introspect(deviceProperty.get().get(0));
         }
     }
 
     public void loadDeviceInfo(Device device) {
-        disposables.add(getDeviceInfoUseCase.execute(device)
+        Single<OcDeviceInfo> deviceInfoSingle = device.getDeviceType() != DeviceType.CLOUD
+                ? getDeviceInfoUseCase.execute(device)
+                : cloudRetrieveDeviceInfoUseCase.execute(device);
+
+        disposables.add(deviceInfoSingle
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> deviceInfoResponse.setValue(Response.loading()))
@@ -233,7 +265,11 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     }
 
     public void loadPlatformInfo(Device device) {
-        disposables.add(getPlatformInfoUseCase.execute(device)
+        Single<OcPlatformInfo> platformInfoSingle = device.getDeviceType() != DeviceType.CLOUD
+                ? getPlatformInfoUseCase.execute(device)
+                : cloudRetrievePlatformInfoUseCase.execute(device);
+
+        disposables.add(platformInfoSingle
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .doOnSubscribe(__ -> platformInfoResponse.setValue(Response.loading()))
@@ -269,15 +305,17 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
     }
 
     public void introspect(Device device) {
-        disposables.add(introspectUseCase.execute(device)
-                .flatMap(uiFromSwaggerUseCase::execute)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .doOnSubscribe(__ -> introspectResponse.setValue(Response.loading()))
-                .subscribe(
-                        introspection -> introspectResponse.setValue(Response.success(introspection)),
-                        throwable -> introspectResponse.setValue(Response.error(throwable))
-                ));
+        if (device.getDeviceType() != DeviceType.CLOUD) {
+            disposables.add(introspectUseCase.execute(device)
+                    .flatMap(uiFromSwaggerUseCase::execute)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .doOnSubscribe(__ -> introspectResponse.setValue(Response.loading()))
+                    .subscribe(
+                            introspection -> introspectResponse.setValue(Response.success(introspection)),
+                            throwable -> introspectResponse.setValue(Response.error(throwable))
+                    ));
+        }
     }
 
     public void buildUiForIntrospect(List<DynamicUiElement> resources) {
@@ -298,7 +336,11 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void findResources() {
         if (deviceProperty.get().size() == 1) {
-            disposables.add(getResourcesUseCase.execute(deviceProperty.get().get(0))
+            Single<List<SerializableResource>> discoverResourcesSingle = deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD
+                    ? getResourcesUseCase.execute(deviceProperty.get().get(0))
+                    : cloudDiscoverResourcesUseCase.execute(deviceProperty.get().get(0));
+
+            disposables.add(discoverResourcesSingle
                     .subscribeOn(schedulersFacade.io())
                     .observeOn(schedulersFacade.ui())
                     .doOnSubscribe(__ -> getResourcesResponse.setValue(Response.loading()))
@@ -311,14 +353,18 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void buildUiForRetrieveResources(List<SerializableResource> resources) {
         if (deviceProperty.get().size() == 1) {
-            for(SerializableResource resource : resources) {
+            for (SerializableResource resource : resources) {
                 getRequest(deviceProperty.get().get(0), resource);
             }
         }
     }
 
     private void getRequest(Device device, SerializableResource resource) {
-        disposables.add(getRequestUseCase.execute(device, resource)
+        Single<SerializableResource> getResourceSingle = device.getDeviceType() != DeviceType.CLOUD
+                ? getRequestUseCase.execute(device, resource)
+                : cloudGetResourceUseCase.execute(device, resource);
+
+        disposables.add(getResourceSingle
                 .subscribeOn(schedulersFacade.io())
                 .observeOn(schedulersFacade.ui())
                 .subscribe(
@@ -360,7 +406,11 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void postRequest(SerializableResource resource, OCRepresentation rep, Object valueArray) {
         if (deviceProperty.get().size() == 1) {
-            disposables.add(postRequestUseCase.execute(deviceProperty.get().get(0), resource, rep, valueArray)
+            Completable postResourceCompletable = deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD
+                    ? postRequestUseCase.execute(deviceProperty.get().get(0), resource, rep, valueArray)
+                    : cloudPostResourceUseCase.execute(deviceProperty.get().get(0), resource, rep, valueArray);
+
+            disposables.add(postResourceCompletable
                     .subscribeOn(schedulersFacade.io())
                     .observeOn(schedulersFacade.ui())
                     .subscribe(
@@ -375,7 +425,11 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void postRequest(SerializableResource resource, Map<String, Object> values) {
         if (deviceProperty.get().size() == 1) {
-            disposables.add(postRequestUseCase.execute(deviceProperty.get().get(0), resource, values)
+            Completable postResourceCompletable = deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD
+                    ? postRequestUseCase.execute(deviceProperty.get().get(0), resource, values)
+                    : cloudPostResourceUseCase.execute(deviceProperty.get().get(0), resource, values);
+
+            disposables.add(postResourceCompletable
                     .subscribeOn(schedulersFacade.io())
                     .observeOn(schedulersFacade.ui())
                     .subscribe(
@@ -390,24 +444,30 @@ public class ClientViewModel implements ViewModel, SceneLifecycle {
 
     public void registerResourceObserve(SerializableResource resource) {
         if (deviceProperty.get().size() == 1) {
-            disposables.add(observeResourceUseCase.execute(deviceProperty.get().get(0), resource)
-                    .subscribeOn(schedulersFacade.io())
-                    .observeOn(schedulersFacade.ui())
-                    .subscribe(
-                            serializableResource -> observeResourceResponse.setValue(Response.success(serializableResource)),
-                            throwable -> observeResourceResponse.setValue(Response.error(throwable))
-                    ));
+            if (deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD) {
+                disposables.add(observeResourceUseCase.execute(deviceProperty.get().get(0), resource)
+                        .subscribeOn(schedulersFacade.io())
+                        .observeOn(schedulersFacade.ui())
+                        .subscribe(
+                                serializableResource -> observeResourceResponse.setValue(Response.success(serializableResource)),
+                                throwable -> observeResourceResponse.setValue(Response.error(throwable))
+                        ));
+            }
         }
     }
 
     public void cancelResourceObserve(SerializableResource resource) {
-        disposables.add(cancelObserveResourceUseCase.execute(resource)
-                .subscribeOn(schedulersFacade.io())
-                .observeOn(schedulersFacade.ui())
-                .subscribe(
-                        () -> {},
-                        throwable -> {}
-                ));
+        if (deviceProperty.get().get(0).getDeviceType() != DeviceType.CLOUD) {
+            disposables.add(cancelObserveResourceUseCase.execute(resource)
+                    .subscribeOn(schedulersFacade.io())
+                    .observeOn(schedulersFacade.ui())
+                    .subscribe(
+                            () -> {
+                            },
+                            throwable -> {
+                            }
+                    ));
+        }
     }
 
     public void cancellAllObserveResource() {

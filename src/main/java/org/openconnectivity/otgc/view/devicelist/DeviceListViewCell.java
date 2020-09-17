@@ -147,6 +147,9 @@ public class DeviceListViewCell extends ListCell<Device> {
             case OWNED_BY_OTHER_WITH_PERMITS:
                 pane.getStyleClass().add("ocf_yellow");
                 break;
+            case CLOUD:
+                pane.getStyleClass().add("ocf_purple");
+                break;
             default:
                 pane.getStyleClass().add("ocf_black");
                 break;
