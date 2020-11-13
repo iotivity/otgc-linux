@@ -19,6 +19,7 @@ sudo apt-get -y automake
 sudo apt-get -y install make 
 sudo apt-get -y install make-guile
 sudo apt-get -y install gcc
+sudo apt-get -y install g++
 
 # maven and swig are needed for building
 sudo apt-get -y install maven
@@ -105,7 +106,8 @@ sudo dpkg -r otgc
 # install the newly created package
 sudo dpkg -i ./otgc-linux/build/debian/out/otgc-${OTGC_VERSION}.deb
 
-
+#choose the correct Java version
+sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
 
 
