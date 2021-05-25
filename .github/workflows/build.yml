@@ -28,7 +28,7 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: make via script
         run: |
-          sudo setup.sh
+          sudo ./setup.sh
           
 
 
