@@ -8,6 +8,9 @@ OTGC_VERSION=3.0.0
 
 ls ~/jdk1.8.0_281/bin
 
+# architecture of the current device
+uname -m
+
 #
 # build otgc (in the otgc-linux folder)
 #
