@@ -24,15 +24,17 @@ else
     echo "Error: Directory does not exist: installing Azul JDK."
 
     cd ~
+    homedir=$PWD
+    echo ${homedir}
     #wget https://www.azul.com/downloads/?version=java-8-lts&package=jdk-fx
     wget https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
     tar -xvf zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
-    export PATH=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
+    export PATH=${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
     cd $mydir
-    ~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -version
+    ${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -version
 
     #export JAVA_HOME=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin
-    export JAVA_HOME=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64
+    export JAVA_HOME=${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64
     # overwrite the existing JAVA environment
 
     ls $JAVA_HOME
