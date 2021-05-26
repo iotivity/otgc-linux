@@ -8,6 +8,9 @@ OTGC_VERSION=3.0.0
 
 ls ~/jdk1.8.0_281/bin
 
+mydir=$PWD
+
+
 if [ -d ~/jdk1.8.0_281/bin ] 
 then
     echo "JDK exist." 
@@ -19,10 +22,12 @@ then
 else
     echo "Error: Directory does not exist: installing Azul JDK."
 
+    cd ~
     #wget https://www.azul.com/downloads/?version=java-8-lts&package=jdk-fx
     wget https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
     tar -xvf zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
     export PATH=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
+    cd $mydir
 fi
 
 java -version
@@ -34,11 +39,8 @@ uname -m
 #
 # build otgc (in the otgc-linux folder)
 #
-export PATH=~/jdk1.8.0_281/bin:$PATH
+#export PATH=~/jdk1.8.0_281/bin:$PATH
 export LD_LIBRARY_PATH=./lib/jni
-
-
-
 
 
 #export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
