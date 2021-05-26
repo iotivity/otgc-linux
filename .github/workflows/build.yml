@@ -31,7 +31,7 @@ jobs:
           # building the iotivity lib
           sh ./build_iotivity.sh
           # buildig the application
-          #sh ./build_otgc.sh
+          sh ./build_otgc.sh
           
 
 
