@@ -81,9 +81,9 @@ cd ..
 # install the created debian package e.g. the otgc application
 #
 # remove the currently installed package
-sudo dpkg -r otgc
+#sudo dpkg -r otgc
 # install the newly created package
-sudo dpkg -i ./build/debian/out/otgc-${OTGC_VERSION}.deb
+#sudo dpkg -i ./build/debian/out/otgc-${OTGC_VERSION}.deb
 
 #choose the correct Java version
 #sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
