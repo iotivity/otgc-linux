@@ -19,6 +19,7 @@ then
     #
     export PATH=~/jdk1.8.0_281/bin:$PATH
     export LD_LIBRARY_PATH=./lib/jni
+    export JAVA_HOME=~/jdk1.8.0_281
 else
     echo "Error: Directory does not exist: installing Azul JDK."
 
@@ -29,6 +30,8 @@ else
     export PATH=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
     cd $mydir
     ~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -version
+
+    export JAVA_HOME=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64
 fi
 
 # architecture of the current device
