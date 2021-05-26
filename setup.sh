@@ -4,7 +4,7 @@ set -x #echo on
 #
 
 rm -rf otgc-linux
-git clone https://github.com/openconnectivity/otgc-linux.git
+git clone https://github.com/iotivity/otgc-linux.git
 cd otgc-linux
 
 # build the iotivity library
