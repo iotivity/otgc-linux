@@ -1,0 +1,47 @@
+#!/bin/bash
+set -x #echo on
+# build setup script to be used with an curl command
+#
+OTGC_VERSION=3.0.0
+
+#
+# build otgc (in the otgc-linux folder)
+#
+
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+
+# install the create lib, so that maven can find it during the build
+mvn install:install-file \
+    -Dfile=lib/iotivity-lite.jar \
+    -DgroupId=org.iotivity \
+    -DartifactId=iotivity-lite \
+    -Dversion=1.0 \
+    -Dpackaging=jar \
+    -DgeneratePom=true
+
+# do the actual build
+mvn jfx:jar
+
+# build the debian package
+cd ./build/debian
+./otgc_native.sh ../../target/jfx/app amd64
+cd ..
+cd ..
+
+#
+# install the created debian package e.g. the otgc application
+#
+# remove the currently installed package
+sudo dpkg -r otgc
+# install the newly created package
+sudo dpkg -i ./build/debian/out/otgc-${OTGC_VERSION}.deb
+
+#choose the correct Java version
+#sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+
+
+
+
+
+
+
