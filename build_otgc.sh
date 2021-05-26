@@ -1,14 +1,20 @@
 #!/bin/bash
 set -x #echo on
-# build setup script to be used with an curl command
+#
+# build script to be used on linux
+# oracle jdk installed on home dir (e.g. ~)
 #
 OTGC_VERSION=3.0.0
+
+ls ~/jdk1.8.0_281/bin
 
 #
 # build otgc (in the otgc-linux folder)
 #
+export PATH=~/jdk1.8.0_281/bin:$PATH
+export LD_LIBRARY_PATH=./lib/jni
 
-export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+#export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 
 # install the create lib, so that maven can find it during the build
 mvn install:install-file \
