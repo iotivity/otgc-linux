@@ -136,7 +136,7 @@ To uninstall the aplication, use the next command:
 ## Script to build
 The following command executes steps for building and installing on Linux (ubuntu 18/20)
 
-   curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
+   curl https://iotivity.github.io/otgc-linux/setup.sh | bash
    
 This uses the Java SDK:
 
@@ -147,7 +147,7 @@ which is supported, note that the openjdk-8-jdk is no longer supported on higher
  
 For rasbian (stretch) use (being reworked):
 
- curl https://openconnectivity.github.io/otgc-linux/setup-pi.sh | bash
+ curl https://iotivity.github.io/otgc-linux/setup-pi.sh | bash
    
  
 Note for building on a raspberry pi the Archicture needs to be armhf and has to run a windowing system
