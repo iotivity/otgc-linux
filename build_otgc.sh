@@ -28,13 +28,15 @@ else
     tar -xvf zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
     export PATH=~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
     cd $mydir
+    ~/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -version
 fi
-
-java -version
 
 # architecture of the current device
 uname -m
 
+java -version
+
+env
 
 #
 # build otgc (in the otgc-linux folder)
