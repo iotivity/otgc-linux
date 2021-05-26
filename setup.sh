@@ -8,9 +8,9 @@ git clone https://github.com/iotivity/otgc-linux.git
 cd otgc-linux
 
 # build the iotivity library
-./build_iotivity.sh
+sh ./build_iotivity.sh
 # build the linux otgc application (including .deb file)
-./build_otgc.sh
+sh ./build_otgc.sh
 
 
 
