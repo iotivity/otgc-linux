@@ -101,7 +101,7 @@ Once the Debian package is build, it can be found in:
 ## Testing
   
 ## Usage
-### Debian package
+### Debian package  - depricated
 The OTGC application requires the following packages:
 
 - openjdk-8-jdk
@@ -133,20 +133,19 @@ To uninstall the aplication, use the next command:
 
     sudo dpkg -r otgc
   
-## Script to build and install
-The following command executes all steps indicated above for building and installing on Linux (ubuntu 18)
+## Script to build
+The following command executes steps for building and installing on Linux (ubuntu 18/20)
 
    curl https://openconnectivity.github.io/otgc-linux/setup.sh | bash
    
-note: __when the executable does start, please reinstall jfx manually__ by entering on the commandline:
+This uses the Java SDK:
 
-sudo apt-get install openjfx=8u161-b12-1ubuntu2 libopenjfx-java=8u161-b12-1ubuntu2 libopenjfx-jni=8u161-b12-1ubuntu2
+https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
 
-and start otgc on the command line: /usr/bin/otgc.sh
-
+which is supported, note that the openjdk-8-jdk is no longer supported on higher versions of Ubuntu.
  
  
-For rasbian (stretch) use:
+For rasbian (stretch) use (being reworked):
 
  curl https://openconnectivity.github.io/otgc-linux/setup-pi.sh | bash
    
