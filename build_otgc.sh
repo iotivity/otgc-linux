@@ -26,9 +26,19 @@ else
     cd ~
     homedir=$PWD
     echo ${homedir}
+
+    FILE=${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
+    if [ -f "$FILE" ]; then
+        echo "$FILE exists."
+    else
+        echo "downloading $FILE"
+        wget https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
+        tar -xvf zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
+
+    fi
     #wget https://www.azul.com/downloads/?version=java-8-lts&package=jdk-fx
-    wget https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
-    tar -xvf zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
+    #wget https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
+    #tar -xvf zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64.tar.gz
     export PATH=${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
     cd $mydir
     ${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -version
@@ -71,9 +81,14 @@ mvn install:install-file \
 # do the actual build
 mvn jfx:jar
 
+
+
+echo "${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -Djava.library.path=./lib/jni -jar target/jfx/app/otgc-3.0.0-jfx.jar" > start.sh
+#${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -Djava.library.path=./lib/jni -jar target/jfx/app/otgc-3.0.0-jfx.jar &
+
 # build the debian package
 cd ./build/debian
-./otgc_native.sh ../../target/jfx/app amd64
+#./otgc_native.sh ../../target/jfx/app amd64
 cd ..
 cd ..
 
