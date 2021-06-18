@@ -83,7 +83,12 @@ mvn jfx:jar
 
 
 
-echo "${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -Djava.library.path=./lib/jni -jar target/jfx/app/otgc-3.0.0-jfx.jar" > start.sh
+echo "# script to start otgc_linux" > start.sh
+echo "# create the data folder" >> start.sh
+echo "mkdir data" >> start.sh
+echo "# start the application" >> start.sh
+echo "${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -Djava.library.path=./lib/jni -jar target/jfx/app/otgc-3.0.0-jfx.jar" >> start.sh
+
 #${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin/java -Djava.library.path=./lib/jni -jar target/jfx/app/otgc-3.0.0-jfx.jar &
 
 # build the debian package
