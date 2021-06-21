@@ -59,3 +59,6 @@ else
    
     export JAVA_HOME_11_X64=$JAVA_HOME
 fi
+
+export PATH=${homedir}/zulu8.54.0.21-ca-fx-jdk8.0.292-linux_x64/bin:$PATH
+export JAVA_HOME_11_X64=$JAVA_HOME
