@@ -7,6 +7,8 @@ rm -rf otgc-linux
 git clone https://github.com/iotivity/otgc-linux.git
 cd otgc-linux
 
+# install the tools
+sh ./install_tools.sh
 # build the iotivity library
 sh ./build_iotivity.sh
 # build the linux otgc application (including .deb file)
