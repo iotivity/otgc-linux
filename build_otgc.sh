@@ -61,8 +61,8 @@ uname -m
 java -version
 
 
-command -v mvn >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
+mvnExists=`mvn -v`
+if [ -z "$mvnExists" ]; then
 sudo apt -y install maven
 fi
 
