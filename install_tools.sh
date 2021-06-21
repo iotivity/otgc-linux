@@ -15,7 +15,7 @@ fi
 #
 # install default jre to have a java compiler (javac)
 #
-jreExists=`javac -v`
+jreExists=`javac -version`
 if [ -z "$jreExists" ]; then
 sudo apt-get -y install default-jdk
 fi
