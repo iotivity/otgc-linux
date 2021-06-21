@@ -12,6 +12,15 @@ sudo apt-get -y install swig
 fi
 
 
+#
+# install default jre to have a java compiler (javac)
+#
+jreExists=`javac -v`
+if [ -z "$jreExists" ]; then
+sudo apt-get -y install default-jdk
+fi
+
+
 ls ~/jdk1.8.0_281/bin
 mydir=$PWD
 

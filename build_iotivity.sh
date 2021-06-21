@@ -11,17 +11,6 @@ set -x
 # in otgc_linux
 mkdir -p lib/jni
 
-if [ -d ~/jdk1.8.0_281/bin ] 
-then
-    echo "JDK exist." 
-    #
-    # build otgc (in the otgc-linux folder)
-    #
-    export PATH=~/jdk1.8.0_281/bin:$PATH
-    export LD_LIBRARY_PATH=./lib/jni
-    export JAVA_HOME=~/jdk1.8.0_281
-fi
-javac -v
 
 # go to the folder of iotivity
 cd ../iotivity-lite/
