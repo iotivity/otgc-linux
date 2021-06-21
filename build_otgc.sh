@@ -64,7 +64,7 @@ java -version
 command -v mvn >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
 sudo apt -y install maven
-endif
+if
 
 env
 
