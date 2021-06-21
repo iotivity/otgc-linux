@@ -21,6 +21,7 @@ then
     export LD_LIBRARY_PATH=./lib/jni
     export JAVA_HOME=~/jdk1.8.0_281
 fi
+javac -v
 
 # go to the folder of iotivity
 cd ../iotivity-lite/
