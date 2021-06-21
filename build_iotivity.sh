@@ -9,11 +9,7 @@ set -x
 #       |---- iotivity_lite  (should be there)
 
 # in otgc_linux
-mkdir lib
-cd lib
-mkdir jni
-cd ..
-cd ..
+mkdir -p lib/jni
 
 # go to the folder of iotivity
 cd ../iotivity-lite/
