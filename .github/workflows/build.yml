@@ -29,6 +29,7 @@ jobs:
       - name: make via script
         run: |
           # building the iotivity lib
+          sh ./checkout_iotivity.sh
           sh ./build_iotivity.sh
           # buildig the application
           sh ./build_otgc.sh
