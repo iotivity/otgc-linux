@@ -6,7 +6,7 @@ set -x
 #       |---- otgc_linux 
 #       |        |- lib/jni  (will be created)
 #       |
-#       |---- iotivity_lite  (will be created)
+#       |---- iotivity_lite  (should be there)
 
 # in otgc_linux
 mkdir lib
@@ -15,12 +15,15 @@ mkdir jni
 cd ..
 cd ..
 
+# go to the folder of iotivity
+cd ../iotivity-lite
 
 cd ./port/linux
 make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1 
 cd ..
 cd ..
 cd ..
+# back at top_level
 
 #
 # copying the result of the build to the created lib/jni folder in otgc_linux
