@@ -16,7 +16,7 @@ cd ..
 cd ..
 
 # go to the folder of iotivity
-cd ../iotivity-lite
+cd ../iotivity-lite/
 
 cd ./port/linux
 make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1 
