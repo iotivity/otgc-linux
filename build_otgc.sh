@@ -1,5 +1,7 @@
 #!/bin/bash
 set -x #echo on
+
+
 #
 # build script to be used on linux
 # oracle jdk installed on home dir (e.g. ~)
@@ -58,6 +60,12 @@ uname -m
 
 java -version
 
+
+command -v mvn >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+sudo apt -y install maven
+endif
+
 env
 
 #
@@ -65,8 +73,6 @@ env
 #
 #export PATH=~/jdk1.8.0_281/bin:$PATH
 export LD_LIBRARY_PATH=./lib/jni
-
-
 #export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
 
 # install the create lib, so that maven can find it during the build
