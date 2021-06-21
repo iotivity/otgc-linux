@@ -67,6 +67,14 @@ sudo apt -y install maven
 fi
 
 env
+#
+# copying the result of the build to the created lib/jni folder in otgc_linux
+# (from top_level)
+pwd
+mkdir -p lib/jni
+cp ../iotivity-lite/swig/iotivity-lite-java/libs/*.so ./lib/jni/.
+cp ../iotivity-lite/swig/iotivity-lite-java/libs/*.jar ./lib/.
+
 
 #
 # build otgc (in the otgc-linux folder)
