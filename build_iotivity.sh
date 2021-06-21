@@ -11,6 +11,8 @@ set -x
 # in otgc_linux
 mkdir -p lib/jni
 
+# make sure that the zulu compiler is being used
+export PATH=~/jdk1.8.0_281/bin:$PATH
 
 # go to the folder of iotivity
 cd ../iotivity-lite/

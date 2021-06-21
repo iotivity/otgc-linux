@@ -12,15 +12,11 @@ OTGC_VERSION=3.0.0
 # architecture of the current device
 uname -m
 
+# make sure that the zulu compiler is being used
+export PATH=~/jdk1.8.0_281/bin:$PATH
 java -version
-
-
-mvnExists=`mvn -v`
-if [ -z "$mvnExists" ]; then
-sudo apt -y install maven
-fi
-
 env
+
 #
 # copying the result of the build to the created lib/jni folder in otgc_linux
 # (from top_level)
