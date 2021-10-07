@@ -79,34 +79,48 @@ public class InitOicStackUseCase {
         /* Current date */
         Date date = new Date();
 
-        /* Kyrio end-entity cert */
-        X509Certificate eeCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
-        if (date.after(eeCert.getNotBefore()) && date.before(eeCert.getNotAfter())) {
-            byte[] kyrioEeCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
-            /* private key of Kyrio end-entity cert */
-            byte[] kyrioEeKey = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_KEY).blockingGet();
-            int credid = OCPki.addMfgCert(device, kyrioEeCertificate, kyrioEeKey);
-            if (credid == -1) {
-                throw new Exception("Add identity certificate error");
-            }
+        // End-entity certs only loaded when using Client Mode
+        if (settingRepository.get(SettingRepository.MODE_KEY, OtgcMode.CLIENT).equals(OtgcMode.CLIENT)) {
+            // Kyrio end-entity cert
+            X509Certificate eeCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
+            if (date.after(eeCert.getNotBefore()) && date.before(eeCert.getNotAfter())) {
+                byte[] kyrioEeCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_CERTIFICATE).blockingGet();
+                // private key of Kyrio end-entity cert
+                byte[] kyrioEeKey = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_EE_KEY).blockingGet();
+                int credid = OCPki.addMfgCert(device, kyrioEeCertificate, kyrioEeKey);
+                if (credid == -1) {
+                    throw new Exception("Add identity certificate error");
+                }
 
-            /* Kyrio intermediate cert */
-            X509Certificate subCaCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
-            if (date.after(subCaCert.getNotBefore()) && date.before(subCaCert.getNotAfter())) {
-                byte[] kyrioSubcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
-                if (OCPki.addMfgIntermediateCert(device, credid, kyrioSubcaCertificate) == -1) {
-                    throw new Exception("Add intermediate certificate error");
+                // Kyrio intermediate cert
+                X509Certificate subCaCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
+                if (date.after(subCaCert.getNotBefore()) && date.before(subCaCert.getNotAfter())) {
+                    byte[] kyrioSubcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_SUBCA_CERTIFICATE).blockingGet();
+                    if (OCPki.addMfgIntermediateCert(device, credid, kyrioSubcaCertificate) == -1) {
+                        throw new Exception("Add intermediate certificate error");
+                    }
+                } else {
+                    showPopupNotValidCertificate("Kyrio intermediate certificate is not valid.");
                 }
             } else {
-                showPopupNotValidCertificate("Kyrio intermediate certificate is not valid.");
+                showPopupNotValidCertificate("Kyrio end entity certificate is not valid.");
+            }
+        }
+
+        /* CloudCA root cert */
+        X509Certificate cloudCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.CLOUD_ROOT_CERTIFICATE).blockingGet();
+        if (date.after(cloudCert.getNotBefore()) && date.before(cloudCert.getNotAfter())) {
+            byte[] cloudRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.CLOUD_ROOT_CERTIFICATE).blockingGet();
+            if (OCPki.addMfgTrustAnchor(device, cloudRootcaCertificate) == -1) {
+                throw new Exception("Add root certificate error");
             }
         } else {
-            showPopupNotValidCertificate("Kyrio end entity certificate is not valid.");
+            showPopupNotValidCertificate("Cloud CA root certificate is not valid.");
         }
 
         /* Kyrio root cert */
-        X509Certificate caCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
-        if (date.after(caCert.getNotBefore()) && date.before(caCert.getNotAfter())) {
+        X509Certificate caCert1 = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
+        if (date.after(caCert1.getNotBefore()) && date.before(caCert1.getNotAfter())) {
             byte[] kyrioRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.KYRIO_ROOT_CERTIFICATE).blockingGet();
             if (OCPki.addMfgTrustAnchor(device, kyrioRootcaCertificate) == -1) {
                 throw new Exception("Add root certificate error");
@@ -116,8 +130,8 @@ public class InitOicStackUseCase {
         }
 
         /* EonTi root cert */
-        caCert = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.EONTI_ROOT_CERTIFICATE).blockingGet();
-        if (date.after(caCert.getNotBefore()) && date.before(caCert.getNotAfter())) {
+        X509Certificate caCert2 = ioRepository.getFileAsX509Certificate(OtgcConstant.DATA_PATH + OtgcConstant.EONTI_ROOT_CERTIFICATE).blockingGet();
+        if (date.after(caCert2.getNotBefore()) && date.before(caCert2.getNotAfter())) {
             byte[] eontiRootcaCertificate = ioRepository.getBytesFromFile(OtgcConstant.EONTI_ROOT_CERTIFICATE).blockingGet();
             if (OCPki.addMfgTrustAnchor(device, eontiRootcaCertificate) == -1) {
                 throw new Exception("Add root certificate error");
@@ -125,6 +139,7 @@ public class InitOicStackUseCase {
         } else {
             showPopupNotValidCertificate("EonTi root certificate is not valid.");
         }
+
 
         OCObt.shutdown();
     }

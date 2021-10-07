@@ -40,7 +40,7 @@ public class GetOTMethodsUseCase {
     }
 
     public Single<List<OcfOxmType>> execute(Device device) {
-        return iotivityRepository.getNonSecureEndpoint(device)
+        return iotivityRepository.getEndpoint(device)
                 .flatMap(endpoint ->
                         doxsRepository.retrieveOTMethods(endpoint)
                         .map(doxm -> doxm.getOxms()));
