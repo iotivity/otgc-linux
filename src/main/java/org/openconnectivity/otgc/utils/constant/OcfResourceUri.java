@@ -37,6 +37,7 @@ public class OcfResourceUri {
     public static final String ACL2_URI = SECURITY_URI + "/acl2";
     public static final String CRED_URI = SECURITY_URI + "/cred";
     public static final String CSR_URI = SECURITY_URI + "/csr";
+    public static final String CLOUDCONFRES_URI = "/CoapCloudConfResURI";
 
     // Filters
     public static final String RESOURCE_TYPE_FILTER = "rt=";

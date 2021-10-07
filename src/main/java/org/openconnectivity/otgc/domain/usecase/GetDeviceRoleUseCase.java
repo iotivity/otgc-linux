@@ -52,7 +52,7 @@ public class GetDeviceRoleUseCase {
     public Single<DeviceRole> execute(Device device) {
         int delay = Integer.parseInt(settingRepository.get(SettingRepository.REQUESTS_DELAY_KEY, SettingRepository.REQUESTS_DELAY_DEFAULT_VALUE));
 
-        return iotivityRepository.getNonSecureEndpoint(device)
+        return iotivityRepository.getEndpoint(device)
                 .flatMap(endpoint ->
                         iotivityRepository.findResources(endpoint)
                         .timeout(iotivityRepository.getDiscoveryTimeout() + 5, TimeUnit.SECONDS)

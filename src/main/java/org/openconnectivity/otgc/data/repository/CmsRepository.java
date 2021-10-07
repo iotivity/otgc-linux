@@ -25,7 +25,9 @@ import org.apache.log4j.Logger;
 import org.iotivity.*;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.*;
 import org.openconnectivity.otgc.domain.model.resource.secure.csr.OcCsr;
+import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.utils.constant.OcfResourceUri;
+import org.iotivity.OCClientResponse;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -131,6 +133,26 @@ public class CmsRepository {
             if (ret < 0) {
                 emitter.onError(new Exception("Provision role certificate error"));
                 OCObt.freeRoleId(roles);
+            }
+        });
+    }
+
+    public Completable provisionTrustAnchor(byte[] certificate, String sid, String deviceId) {
+        return Completable.create(emitter -> {
+            OCUuid di = OCUuidUtil.stringToUuid(deviceId);
+
+            OCObtStatusHandler handler = (int status) -> {
+                if (status >= 0) {
+                    LOG.debug("Provision trust anchor succeeded");
+                    emitter.onComplete();
+                } else {
+                    emitter.onError(new Exception("Provision trust anchor error"));
+                }
+            };
+
+            int ret = OCObt.provisionTrustAnchor(certificate, sid, di, handler);
+            if (ret < 0) {
+                emitter.onError(new Exception("Provision trust anchor error"));
             }
         });
     }
@@ -241,6 +263,33 @@ public class CmsRepository {
                 LOG.error(error);
                 emitter.onError(new Exception(error));
             }
+        });
+    }
+
+    public Completable registerDeviceCloud(String deviceId, String deviceURL, String authProvider, String cloudUrl, String cloudUuid, String accessToken) {
+        return Completable.create(emitter -> {
+            OCCloudContext ctx = OCCloud.getContext(0);
+
+            OCUuid uuid = OCUuidUtil.stringToUuid(deviceId);
+
+            OCResponseHandler handler = (OCClientResponse response) -> {
+                if (response.getCode() == OCStatus.OC_STATUS_CHANGED) {
+                    LOG.debug("Register device on cloud success");
+                    emitter.onComplete();
+                } else if (response.getCode() == OCStatus.OC_STATUS_CREATED) {
+                    LOG.debug("Register device on cloud success");
+                    emitter.onComplete();
+                } else {
+                    String error = "Register device on cloud error";
+                    LOG.error(error + ": " + response.getCode());
+                    emitter.onError(new Exception(error));
+                }
+            };
+
+            if (ctx != null) {
+                OCObt.UpdateCloudConfDevice(uuid, deviceURL, accessToken, authProvider, cloudUrl, cloudUuid, handler);
+            }
+            emitter.onComplete();
         });
     }
 }

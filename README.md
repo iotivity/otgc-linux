@@ -68,7 +68,7 @@ cd <iotivity-lite>/port/linux
 ```
 3. Execute the command to build the library.
 ```
-make DEBUG=1 SECURE=1 IPV4=1 TCP=0 PKI=1 DYNAMIC=1 CLOUD=0 JAVA=1 IDD=1
+make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1
 ```
 
 Once built, the library can be found at:

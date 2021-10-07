@@ -103,6 +103,7 @@ public class OcDoxm extends OcResourceBase {
         /* oxms */
         long[] oxmsValue = OCRep.getLongArray(rep, OcfResourceAttributeKey.OXMS_KEY);
         List<OcfOxmType> oxmTypes = new ArrayList<>();
+
         for (long value : oxmsValue) {
             oxmTypes.add(OcfOxmType.valueToEnum((int)value));
         }
@@ -127,10 +128,10 @@ public class OcDoxm extends OcResourceBase {
         this.setRowneruuid(rowneruuid);
         /* rt */
         String[] resourceTypes = OCRep.getStringArray(rep, OcfResourceAttributeKey.RESOURCE_TYPES_KEY);
-        this.setResourceTypes(Arrays.asList(resourceTypes));
+        this.setResourceTypes(resourceTypes != null ? Arrays.asList(resourceTypes) : null);
         /* if */
         String[] interfaces = OCRep.getStringArray(rep, OcfResourceAttributeKey.INTERFACES_KEY);
-        this.setResourceTypes(Arrays.asList(interfaces));
+        this.setInterfaces(interfaces != null ? Arrays.asList(interfaces) : null);
     }
 
     public CborEncoder parseToCbor() {

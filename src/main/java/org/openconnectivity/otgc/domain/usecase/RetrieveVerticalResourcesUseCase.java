@@ -37,7 +37,7 @@ public class RetrieveVerticalResourcesUseCase {
     }
 
     public Single<List<String>> execute(Device device) {
-        return iotivityRepository.getNonSecureEndpoint(device)
+        return iotivityRepository.getEndpoint(device)
                 .flatMap(iotivityRepository::findResources)
                 .map(ocRes -> {
                     List<String> verticalResources = new ArrayList<>();

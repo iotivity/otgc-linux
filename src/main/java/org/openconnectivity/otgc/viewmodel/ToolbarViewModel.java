@@ -22,12 +22,14 @@ package org.openconnectivity.otgc.viewmodel;
 import de.saxsys.mvvmfx.InjectScope;
 import de.saxsys.mvvmfx.ScopeProvider;
 import de.saxsys.mvvmfx.ViewModel;
+import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
 import io.reactivex.disposables.CompositeDisposable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.*;
 import javafx.beans.value.ObservableBooleanValue;
 import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.domain.usecase.accesscontrol.CreateAclUseCase;
+import org.openconnectivity.otgc.domain.usecase.cloud.RegisterDeviceCloudUseCase;
 import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 import org.openconnectivity.otgc.domain.model.devicelist.DeviceType;
@@ -74,6 +76,7 @@ public class ToolbarViewModel implements ViewModel {
     private final GetDeviceIdUseCase getDeviceIdUseCase;
     private final OffboardDeviceUseCase offboardDeviceUseCase;
     private final GetDeviceRoleUseCase getDeviceRoleUseCase;
+    private final RegisterDeviceCloudUseCase registerDeviceCloudUseCase;
 
     // Observable responses
     private final ObjectProperty<Response<Device>> otmResponse = new SimpleObjectProperty<>();
@@ -83,6 +86,7 @@ public class ToolbarViewModel implements ViewModel {
     private final ObjectProperty<Response<Device>> offboardResponse = new SimpleObjectProperty<>();
     private final ObjectProperty<Response<Void>> clientModeResponse = new SimpleObjectProperty<>();
     private final ObjectProperty<Response<Void>> obtModeResponse = new SimpleObjectProperty<>();
+    private final ObjectProperty<Response<Void>> registerDeviceCloudResponse = new SimpleObjectProperty<>();
     private final ObjectProperty<Response<String>> modeProperty = new SimpleObjectProperty<>();
 
     // Onboard selected devices responses
@@ -93,6 +97,10 @@ public class ToolbarViewModel implements ViewModel {
     private final ObjectProperty<Response<Device>> provisionAceOtmMultiResponse = new SimpleObjectProperty<>();
 
     private SelectOxMListener oxmListener;
+    private SelectAccessTokenListener accessTokenListener;
+
+    @Inject
+    private NotificationCenter notificationCenter;
 
     public void initialize() {
         deviceProperty = deviceListToolbarDetailScope.selectedDeviceProperty();
@@ -115,7 +123,8 @@ public class ToolbarViewModel implements ViewModel {
                             GetModeUseCase getModeUseCase,
                             GetDeviceIdUseCase getDeviceIdUseCase,
                             OffboardDeviceUseCase offboardDeviceUseCase,
-                            GetDeviceRoleUseCase getDeviceRoleUseCase) {
+                            GetDeviceRoleUseCase getDeviceRoleUseCase,
+                            RegisterDeviceCloudUseCase registerDeviceCloudUseCase) {
         this.schedulersFacade = schedulersFacade;
         this.getOTMethodsUseCase = getOTMethodsUseCase;
         this.onboardUseCase = onboardUseCase;
@@ -132,6 +141,7 @@ public class ToolbarViewModel implements ViewModel {
         this.getDeviceIdUseCase = getDeviceIdUseCase;
         this.offboardDeviceUseCase = offboardDeviceUseCase;
         this.getDeviceRoleUseCase = getDeviceRoleUseCase;
+        this.registerDeviceCloudUseCase = registerDeviceCloudUseCase;
     }
 
     public ObservableBooleanValue onboardButtonDisabled() {
@@ -159,6 +169,10 @@ public class ToolbarViewModel implements ViewModel {
 
     public void setOxmListener(SelectOxMListener listener) {
         this.oxmListener = listener;
+    }
+
+    public void setAccessTokenListener(SelectAccessTokenListener listener) {
+        this.accessTokenListener = listener;
     }
 
     public ObjectProperty<Response<Device>> otmResponseProperty() {
@@ -322,6 +336,40 @@ public class ToolbarViewModel implements ViewModel {
                         },
                         throwable -> offboardResponse.setValue(Response.error(throwable))
 
+                ));
+    }
+
+    public void registerDeviceCloud(Device deviceToRegister) {
+        disposables.add(getModeUseCase.execute()
+                .subscribeOn(schedulersFacade.io())
+                .observeOn(schedulersFacade.ui())
+                .subscribe(
+                        mode -> {
+                            if (mode.equals(OtgcMode.OBT)) {
+
+                                getModeUseCase.execute()
+                                        .map(oxms -> {
+                                            return accessTokenListener.onGetAccessToken();
+                                        }).filter(accessToken -> accessToken != null)
+                                        .subscribeOn(schedulersFacade.io())
+                                        .observeOn(schedulersFacade.ui())
+                                        .subscribe(
+                                                accessToken -> registerDeviceCloudUseCase.execute(deviceToRegister, accessToken)
+
+
+                                        .subscribeOn(schedulersFacade.io())
+                                        .observeOn(schedulersFacade.ui())
+                                        .subscribe(
+                                                () -> {
+                                                    notificationCenter.publish(NotificationKey.SCAN_DEVICES);
+                                                },
+                                                throwable -> registerDeviceCloudResponse.setValue(Response.error(throwable))
+                                        ));
+                            } else {
+                                registerDeviceCloudResponse.setValue(Response.success(null));
+                            }
+                        },
+                        throwable -> registerDeviceCloudResponse.setValue(Response.error(throwable))
                 ));
     }
 
@@ -538,6 +586,10 @@ public class ToolbarViewModel implements ViewModel {
 
     public interface SelectOxMListener {
         OcfOxmType onGetOxM(List<OcfOxmType> supportedOxm);
+    }
+
+    public interface SelectAccessTokenListener {
+        String onGetAccessToken();
     }
 }
 

@@ -21,6 +21,7 @@ package org.openconnectivity.otgc.view.menu;
 
 import com.google.inject.Inject;
 import de.saxsys.mvvmfx.*;
+import de.saxsys.mvvmfx.utils.notifications.NotificationCenter;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -33,14 +34,17 @@ import javafx.scene.control.MenuItem;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.iotivity.OCCloudStatusMask;
+import org.openconnectivity.otgc.utils.constant.NotificationKey;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
 import org.openconnectivity.otgc.utils.viewmodel.Status;
 import org.openconnectivity.otgc.view.cloud.CloudView;
+import org.openconnectivity.otgc.view.toolbar.ToolbarView;
 import org.openconnectivity.otgc.viewmodel.MenuViewModel;
 import org.openconnectivity.otgc.view.about.AboutView;
 import org.openconnectivity.otgc.utils.util.DialogHelper;
 import org.openconnectivity.otgc.view.setting.SettingsView;
+import org.openconnectivity.otgc.viewmodel.ToolbarViewModel;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -54,6 +58,9 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
 
     @Inject
     private Stage primaryStage;
+
+    @javax.inject.Inject
+    private NotificationCenter notificationCenter;
 
     private ResourceBundle resourceBundle;
 
@@ -119,6 +126,7 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
                 cloudRegister.onActionProperty().setValue(this::cloudRegister);
                 cloudLogged.visibleProperty().setValue(false);
                 cloudRefreshToken.visibleProperty().setValue(false);
+                notificationCenter.publish(NotificationKey.CLOUD_UNREGISTER);
             }
             if ((status & OCCloudStatusMask.OC_CLOUD_REGISTERED) == OCCloudStatusMask.OC_CLOUD_REGISTERED) {
                 cloudRegister.visibleProperty().setValue(true);
@@ -128,6 +136,7 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
                 cloudLogged.textProperty().setValue(resourceBundle.getString("menu.cloud.login"));
                 cloudLogged.onActionProperty().setValue(this::cloudLogin);
                 cloudRefreshToken.visibleProperty().setValue(true);
+                notificationCenter.publish(NotificationKey.CLOUD_REGISTER);
             }
             if ((status & OCCloudStatusMask.OC_CLOUD_LOGGED_IN) == OCCloudStatusMask.OC_CLOUD_LOGGED_IN) {
                 cloudRegister.visibleProperty().setValue(true);
@@ -137,6 +146,7 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
                 cloudLogged.textProperty().setValue(resourceBundle.getString("menu.cloud.logout"));
                 cloudLogged.onActionProperty().setValue(this::cloudLogout);
                 cloudRefreshToken.visibleProperty().setValue(true);
+                notificationCenter.publish(NotificationKey.CLOUD_REGISTER);
             }
             if ((status & OCCloudStatusMask.OC_CLOUD_TOKEN_EXPIRY) == OCCloudStatusMask.OC_CLOUD_TOKEN_EXPIRY) {
                 viewModel.retrieveTokenExpiry();
@@ -149,6 +159,7 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
                 cloudLogged.textProperty().setValue(resourceBundle.getString("menu.cloud.login"));
                 cloudLogged.onActionProperty().setValue(this::cloudLogin);
                 cloudRefreshToken.visibleProperty().setValue(true);
+                notificationCenter.publish(NotificationKey.CLOUD_REGISTER);
             }
             if ((status & OCCloudStatusMask.OC_CLOUD_DEREGISTERED) == OCCloudStatusMask.OC_CLOUD_DEREGISTERED) {
                 cloudRegister.visibleProperty().setValue(true);
@@ -156,6 +167,7 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
                 cloudRegister.onActionProperty().setValue(this::cloudRegister);
                 cloudLogged.visibleProperty().setValue(false);
                 cloudRefreshToken.visibleProperty().setValue(false);
+                notificationCenter.publish(NotificationKey.CLOUD_UNREGISTER);
             }
         }
     }
@@ -180,5 +192,4 @@ public class MenuView implements FxmlView<MenuViewModel>, Initializable {
     public void cloudRefreshToken() {
         viewModel.refreshToken();
     }
-
 }
