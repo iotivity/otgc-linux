@@ -25,10 +25,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import org.openconnectivity.otgc.data.repository.SettingRepository;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
 import org.openconnectivity.otgc.domain.usecase.trustanchor.*;
 import org.openconnectivity.otgc.utils.rx.SchedulersFacade;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
+import org.openconnectivity.otgc.utils.constant.OtgcMode;
 
 import javax.inject.Inject;
 import java.io.File;
@@ -45,6 +47,7 @@ public class TrustAnchorViewModel implements ViewModel {
     private final SaveEndEntityCertificateUseCase saveEndEntityCertificateUseCase;
     private final GetTrustAnchorUseCase getTrustAnchorUseCase;
     private final RemoveTrustAnchorByCredidUseCase remoteRemoveTrustAnchorByCredidUseCase;
+    private final SettingRepository settingRepository;
 
     // Observable values
     private ListProperty<OcCredential> trustAnchorList = new SimpleListProperty<>();
@@ -59,17 +62,24 @@ public class TrustAnchorViewModel implements ViewModel {
                                 SaveIntermediateCertificateUseCase saveIntermediateCertificateUseCase,
                                 SaveEndEntityCertificateUseCase saveEndEntityCertificateUseCase,
                                 GetTrustAnchorUseCase getTrustAnchorUseCase,
-                                RemoveTrustAnchorByCredidUseCase remoteRemoveTrustAnchorByCredidUseCase) {
+                                RemoveTrustAnchorByCredidUseCase remoteRemoveTrustAnchorByCredidUseCase,
+                                SettingRepository settingRepository) {
         this.schedulersFacade = schedulersFacade;
         this.storeTrustAnchorUseCase = storeTrustAnchorUseCase;
         this.saveIntermediateCertificateUseCase = saveIntermediateCertificateUseCase;
         this.saveEndEntityCertificateUseCase = saveEndEntityCertificateUseCase;
         this.getTrustAnchorUseCase = getTrustAnchorUseCase;
         this.remoteRemoveTrustAnchorByCredidUseCase = remoteRemoveTrustAnchorByCredidUseCase;
+        this.settingRepository = settingRepository;
     }
 
     public ObjectProperty<Response<Void>> saveCertificateResponseProperty() {
         return saveCertificateResponse;
+    }
+
+    public boolean isClientMode()
+    {
+        return settingRepository.get(SettingRepository.MODE_KEY, OtgcMode.CLIENT).equals(OtgcMode.CLIENT);
     }
 
     public void retrieveCertificates() {

@@ -30,4 +30,6 @@ public class NotificationKey {
     public static final String CANCEL_ALL_OBSERVERS = "cancel all observers";
     public static final String SHUTDOWN_OIC_STACK = "shutdown_oic_stack";
     public static final String REFRESH_ID = "refresh_id";
+    public static final String CLOUD_REGISTER = "cloud_register";
+    public static final String CLOUD_UNREGISTER = "cloud_unregister";
 }

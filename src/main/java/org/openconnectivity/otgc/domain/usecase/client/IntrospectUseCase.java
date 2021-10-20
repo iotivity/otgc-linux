@@ -43,7 +43,7 @@ public class IntrospectUseCase {
     }
 
     public Single<JSONObject> execute(Device device) {
-        return iotivityRepository.getNonSecureEndpoint(device)
+        return iotivityRepository.getEndpoint(device)
                 .flatMap(endpoint -> iotivityRepository.findResource(endpoint, OcfResourceType.INTROSPECTION))
                 .flatMap(res -> {
                     OcResource introspectionResource = res.getResourceList().get(0);

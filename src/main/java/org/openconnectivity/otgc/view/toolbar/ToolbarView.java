@@ -46,6 +46,7 @@ import org.openconnectivity.otgc.utils.constant.OtgcMode;
 import org.openconnectivity.otgc.utils.util.DialogHelper;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
+import org.openconnectivity.otgc.view.menu.MenuView;
 import org.openconnectivity.otgc.view.trustanchor.TrustAnchorView;
 import org.openconnectivity.otgc.viewmodel.ToolbarViewModel;
 
@@ -73,10 +74,12 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
     @FXML private JFXButton clientModeButton;
     @FXML private JFXButton obtModeButton;
     @FXML private JFXButton trustAnchorButton;
+    @FXML private JFXButton registerDeviceCloudButton;
 
     private int positionBeingUpdated = 0;
 
     private OcfOxmType selectedOxm;
+    private String selectedAccessToken;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -89,6 +92,7 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         //obtModeButton.disableProperty().bind(viewModel.obtModeButtonDisabled());
 
         viewModel.setOxmListener(this::onGetOxM);
+        viewModel.setAccessTokenListener(this::onGetAccessToken);
 
         viewModel.otmResponseProperty().addListener(this::processOtmResponse);
         viewModel.deviceInfoProperty().addListener(this::processDeviceInfoResponse);
@@ -105,7 +109,20 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
         viewModel.modeResponseProperty().addListener(this::processModeResponse);
 
         notificationCenter.subscribe(NotificationKey.OIC_STACK_INITIALIZED, (key, payload) -> viewModel.getMode());
+
+        notificationCenter.subscribe(NotificationKey.CLOUD_REGISTER,
+                ((key, payload) -> {
+                    registerDeviceCloudButton.disableProperty().setValue(false);
+                })
+        );
+
+        notificationCenter.subscribe(NotificationKey.CLOUD_UNREGISTER,
+                ((key, payload) -> {
+                    registerDeviceCloudButton.disableProperty().setValue(true);
+                })
+        );
     }
+
 
     public OcfOxmType onGetOxM(List<OcfOxmType> supportedOxm) {
         selectedOxm = null;
@@ -181,13 +198,21 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
     }
 
     @FXML
+    public void handleRegisterDeviceCloudButton() {
+        if (viewModel.deviceProperty.get().size() == 1) {
+            positionBeingUpdated = viewModel.positionDeviceProperty().get();
+            viewModel.registerDeviceCloud(viewModel.deviceProperty.get().get(0));
+        }
+    }
+
+    @FXML
     public void handleClientModeButton() {
-        showConfirmSetMode(OtgcMode.CLIENT, false);
+        showConfirmSetMode(OtgcMode.CLIENT, true);
     }
 
     @FXML
     public void handleObtModeButton() {
-        showConfirmSetMode(OtgcMode.OBT, false);
+        showConfirmSetMode(OtgcMode.OBT, true);
     }
 
     @FXML
@@ -472,6 +497,55 @@ public class ToolbarView implements FxmlView<ToolbarViewModel>, Initializable {
                 viewModel.updateItem(position, device);
             }
         });
+    }
+
+
+    public void updateCloudRegisterDeviceEnable(boolean enabled)
+    {
+        registerDeviceCloudButton.disableProperty().setValue(!enabled);
+    }
+
+    public String onGetAccessToken() {
+        selectedAccessToken = "";
+
+        final Object lock = new Object();
+        Platform.runLater(() -> {
+
+            ButtonType okButton = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+
+            Alert alertDialog = new Alert(Alert.AlertType.CONFIRMATION);
+            alertDialog.setTitle(resourceBundle.getString("dialog.title.get_access_token"));
+            alertDialog.setHeaderText("Access Token: ");
+            final JFXTextField input = new JFXTextField();
+            input.setText("");
+            alertDialog.getDialogPane().setGraphic(input);
+            alertDialog.getButtonTypes().clear();
+            alertDialog.getButtonTypes().add(okButton);
+
+            Optional<ButtonType> result = alertDialog.showAndWait();
+
+            try {
+                synchronized (lock) {
+                    if (result.get() == okButton) {
+                        selectedAccessToken = input.getText();
+                    }
+                    lock.notifyAll();
+                }
+            } catch (Exception e) {
+                LOG.error(e.getLocalizedMessage());
+            }
+
+        });
+        synchronized (lock) {
+            try {
+                lock.wait();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                LOG.error(ex.getLocalizedMessage());
+            }
+        }
+
+        return selectedAccessToken;
     }
 
     private void showConfirmSetMode(String mode, boolean reset) {

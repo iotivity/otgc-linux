@@ -7,6 +7,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Label;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.log4j.Logger;
 import org.openconnectivity.otgc.utils.util.Toast;
@@ -15,6 +16,7 @@ import org.openconnectivity.otgc.utils.viewmodel.Status;
 import org.openconnectivity.otgc.viewmodel.CloudViewModel;
 
 import javax.inject.Inject;
+import java.io.File;
 import java.net.URL;
 import java.util.ResourceBundle;
 
@@ -33,6 +35,7 @@ public class CloudView implements FxmlView<CloudViewModel>, Initializable {
     @FXML private JFXTextField cloudUrlTextField;
     @FXML private JFXTextField accessTokenTextField;
     @FXML private JFXTextField cloudUuidTextField;
+    @FXML private Label selectCertificateText;
 
     private ResourceBundle resourceBundle;
 

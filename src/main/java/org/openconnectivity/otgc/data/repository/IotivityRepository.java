@@ -313,6 +313,24 @@ public class IotivityRepository {
                 .filter(device -> !device.getDeviceId().equals(getDeviceId().blockingGet()));
     }
 
+    // Returns a nonsecure endpoint if exists, if not a secure endpoint is returned
+    public Single<String> getEndpoint(Device device) {
+        return Single.create(emitter -> {
+            String endpoint = device.getIpv6Host() != null ? device.getIpv6Host() : device.getIpv6TcpHost();
+            if (endpoint == null) {
+                endpoint = device.getIpv4Host() != null ? device.getIpv4Host() : device.getIpv4TcpHost();
+                if (endpoint == null) {
+                    endpoint = device.getIpv6SecureHost() != null ? device.getIpv6SecureHost() : device.getIpv6TcpSecureHost();
+                    if (endpoint == null) {
+                        endpoint = device.getIpv4SecureHost() != null ? device.getIpv4SecureHost() : device.getIpv4TcpSecureHost();
+                    }
+                }
+            }
+            emitter.onSuccess(endpoint);
+        });
+    }
+
+
     public Single<String> getNonSecureEndpoint(Device device) {
         return Single.create(emitter -> {
             String endpoint = device.getIpv6Host() != null ? device.getIpv6Host() : device.getIpv6TcpHost();
@@ -368,6 +386,30 @@ public class IotivityRepository {
             emitter.onSuccess(ep);
         });
     }
+  
+    /*
+    public Single<String> getCloudConfResurceUri(String endpoint) {
+        return Single.create(emitter -> {
+            OCEndpoint ep = OCEndpointUtil.stringToEndpoint(endpoint, new String[1]);
+
+            OCResponseHandler handler = (OCClientResponse response) -> {
+                OCStatus code = response.getCode();
+                if (code == OCStatus.OC_STATUS_OK) {
+                    OcDeviceInfo deviceInfo = new OcDeviceInfo();
+                    deviceInfo.parseOCRepresentation(response.getPayload());
+                    emitter.onSuccess(deviceInfo);
+                } else {
+                    emitter.onError(new Exception("Get device info error - code: " + code));
+                }
+            };
+
+            if (!OCMain.doGet(OcfResourceUri.DEVICE_INFO_URI, ep, null, handler, OCQos.HIGH_QOS)) {
+                emitter.onError(new Exception("Get device info error"));
+            }
+
+            OCEndpointUtil.freeEndpoint(ep);
+        });
+    }*/
 
     public Single<OcDeviceInfo> getDeviceInfo(String endpoint) {
         return Single.create(emitter -> {

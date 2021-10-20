@@ -2,7 +2,8 @@
 set -x #echo on
 # build setup script to be used with an curl command
 #
-OTGC_VERSION=2.13.0
+OTGC_VERSION=3.1.0
+
 
 #
 # system update
@@ -56,7 +57,7 @@ cd ..
 rm -rf iotivity-lite
 git clone https://github.com/iotivity/iotivity-lite.git
 cd iotivity-lite
-git checkout bb53715d5e4dbe30360685690bac61f2e4546f6b
+git checkout 6d4c08aa76f54d3587adcac38bcd423bded7353d
 
 cd ./port/linux
 make DEBUG=1 SECURE=1 IPV4=1 TCP=1 PKI=1 DYNAMIC=1 CLOUD=1 JAVA=1 IDD=1 
@@ -108,8 +109,4 @@ sudo dpkg -i ./otgc-linux/build/debian/out/otgc-${OTGC_VERSION}.deb
 
 #choose the correct Java version
 sudo update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
-
-
-
-
 

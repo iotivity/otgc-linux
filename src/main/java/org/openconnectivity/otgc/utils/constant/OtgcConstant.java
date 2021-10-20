@@ -42,4 +42,5 @@ public class OtgcConstant {
     public static String KYRIO_SUBCA_CERTIFICATE = "kyrio-subca-cert.pem";
     public static String KYRIO_EE_CERTIFICATE = "kyrio-ee-cert.pem";
     public static String KYRIO_EE_KEY = "kyrio-ee-key.pem";
+    public static String CLOUD_ROOT_CERTIFICATE = "cloudca.pem";
 }

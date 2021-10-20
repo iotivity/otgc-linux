@@ -49,7 +49,9 @@ public class GetDeviceInfoUseCase {
     public Single<OcDeviceInfo> execute(Device device) {
         int delay = Integer.parseInt(settingRepository.get(SettingRepository.REQUESTS_DELAY_KEY, SettingRepository.REQUESTS_DELAY_DEFAULT_VALUE));
 
-        return iotivityRepository.getNonSecureEndpoint(device)
+
+
+        return iotivityRepository.getEndpoint(device)
                 .flatMap(iotivityRepository::getDeviceInfo)
                 .delay(delay, TimeUnit.SECONDS, schedulersFacade.ui());
     }

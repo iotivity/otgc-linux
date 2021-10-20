@@ -17,26 +17,25 @@
  *
  */
 
-package org.openconnectivity.otgc.domain.usecase.client;
+package org.openconnectivity.otgc.domain.usecase.credential;
 
-import io.reactivex.Single;
-import org.openconnectivity.otgc.domain.model.resource.virtual.p.OcPlatformInfo;
-import org.openconnectivity.otgc.data.repository.IotivityRepository;
+import io.reactivex.Completable;
+import org.openconnectivity.otgc.data.repository.CmsRepository;
 import org.openconnectivity.otgc.domain.model.devicelist.Device;
 
 import javax.inject.Inject;
 
-public class GetPlatformInfoUseCase {
-    private final IotivityRepository iotivityRepository;
+public class ProvisionTrustAnchorUseCase {
+    private final CmsRepository cmsRepository;
 
     @Inject
-    public GetPlatformInfoUseCase(IotivityRepository iotivityRepository) {
-        this.iotivityRepository = iotivityRepository;
+    public ProvisionTrustAnchorUseCase(CmsRepository cmsRepository) {
+        this.cmsRepository = cmsRepository;
+
     }
 
-    public Single<OcPlatformInfo> execute(Device device) {
-        return iotivityRepository.getEndpoint(device)
-                .flatMap(iotivityRepository::getPlatformInfo);
-    }
 
+    public Completable execute(byte[] certificate, String sid, Device device) {
+        return cmsRepository.provisionTrustAnchor(certificate, sid, device.getDeviceId());
+    }
 }

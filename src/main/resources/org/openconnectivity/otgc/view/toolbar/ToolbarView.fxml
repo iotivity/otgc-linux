@@ -35,6 +35,8 @@
                            onAction="#handleOnboardButton" text="%toolbar.onboard" />
                 <JFXButton focusTraversable="false" fx:id="offboardButton"
                            onAction="#handleOffboardButton" text="%toolbar.offboard" />
+                <JFXButton focusTraversable="false" fx:id="registerDeviceCloudButton" disable="true"
+                           onAction="#handleRegisterDeviceCloudButton" text="%toolbar.register_cloud" />
                 <JFXButton focusTraversable="false" fx:id="obtModeButton"
                            onAction="#handleObtModeButton" text="%toolbar.obt_mode" />
                 <JFXButton focusTraversable="false" fx:id="clientModeButton"

@@ -34,7 +34,9 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Base64;
+import org.openconnectivity.otgc.data.repository.SettingRepository;
 import org.openconnectivity.otgc.domain.model.resource.secure.cred.OcCredential;
+import org.openconnectivity.otgc.utils.constant.OtgcMode;
 import org.openconnectivity.otgc.utils.util.Toast;
 import org.openconnectivity.otgc.utils.viewmodel.Response;
 import org.openconnectivity.otgc.viewmodel.TrustAnchorViewModel;
@@ -115,6 +117,12 @@ public class TrustAnchorView implements FxmlView<TrustAnchorViewModel>, Initiali
         removeCertificateButton.disableProperty().bind(Bindings.createBooleanBinding(() ->
                                                 listView.getSelectionModel().getSelectedItem() == null,
                                                     listView.getSelectionModel().selectedItemProperty()));
+
+
+        if (viewModel.isClientMode())
+            endentityRadioButton.setDisable(false);
+        else
+            endentityRadioButton.setDisable(true);
     }
 
     @FXML
